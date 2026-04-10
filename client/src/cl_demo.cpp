@@ -46,6 +46,9 @@ extern std::string server_host;
 extern std::string digest;
 extern OResFiles wadfiles;
 
+// gametic: message position in file
+std::unordered_map<uint32_t, long> message_gametic_lookup;
+
 /**
  * @brief Map demo versions to the latest Odamex version that can read them.
  *
@@ -408,6 +411,28 @@ bool NetDemo::readMapIndex()
 	return true;
 }
 
+void NetDemo::populateMessageLookup()
+{
+	fseek(demofp, NetDemo::HEADER_SIZE, SEEK_SET);
+
+	netdemo_message_t type;
+	uint32_t len = 0, tic = 0;
+
+	do
+	{
+		readMessageHeader(type, len, tic);
+
+		if (type == NetDemo::msg_snapshot)
+		{
+			continue;
+		}
+
+		long file_position = ftell(demofp);
+		
+		message_gametic_lookup[tic] = file_position - NetDemo::MESSAGE_HEADER_SIZE;
+
+	} while (fseek(demofp, len, SEEK_CUR) == 0 && len != 0);
+}
 
 
 //
@@ -580,6 +605,8 @@ bool NetDemo::startPlaying(const std::string &filename)
 		error("Unable to read netdemo map index.\n");
 		return false;
 	}
+
+	populateMessageLookup();
 
 	// get set up to read server cmds
 	fseek(demofp, NetDemo::HEADER_SIZE, SEEK_SET);
@@ -781,7 +808,7 @@ void NetDemo::ticker()
 	netdemotic++;
 	if (netdemotic == pause_netdemotic)
 	{
-		pause_netdemotic = netdemotic - 1;
+		pause_netdemotic = 0;
 		pause();
 		::paused = true;
 	}
@@ -1224,6 +1251,33 @@ void NetDemo::nextTic()
 		return;
 
 	pause_netdemotic = netdemotic + 1;
+	resume();
+	::paused = false;
+}
+
+//
+// prevTic()
+//
+//		Rewind to the previous gametic.
+//
+void NetDemo::prevTic()
+{
+	if (!isPaused())
+		return;
+
+	seek_netdemotic = netdemotic < 4 ? 1 : netdemotic - 2;
+
+	//fseek(demofp, -50, SEEK_CUR);
+
+	pause_netdemotic = netdemotic < 4 ? 2 : netdemotic - 1;
+
+	long seek_position = message_gametic_lookup[seek_netdemotic + header.starting_gametic];
+	fseek(demofp, seek_position, SEEK_SET);
+	netdemotic = seek_netdemotic;
+
+	consoleplayer().snapshots.clearSnapshots();
+
+	//resume();
 	resume();
 	::paused = false;
 }

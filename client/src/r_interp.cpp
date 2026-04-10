@@ -496,7 +496,7 @@ void OInterpolation::interpolateCamera(fixed_t amount, bool use_localview,
 			vs = CameraSector;
 		}
 
-		if (amount < FRACUNIT && interpolationEnabled)
+		if (amount < FRACUNIT && interpolationEnabled && !netdemo.seek_netdemotic > 0)
 		{
 			if (use_localview && !::localview.skipangle)
 			{

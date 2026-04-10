@@ -31,6 +31,10 @@ public:
 	[[nodiscard]] int getSpacing() const { return header.snapshot_spacing; }
 
 	void nextTic();
+	void prevTic();
+
+	uint32_t seek_netdemotic = 0;
+
 	void nextSnapshot();
 	void prevSnapshot();
 	void nextMap();
@@ -96,6 +100,7 @@ private:
 	bool readSnapshotIndex();
 	bool writeMapIndex();
 	bool readMapIndex();
+	void populateMessageLookup();
 	[[nodiscard]] int getCurrentSnapshotIndex() const;
 	[[nodiscard]] int getCurrentMapIndex() const;
 

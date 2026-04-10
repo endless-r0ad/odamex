@@ -598,6 +598,7 @@ void CL_StepTics(unsigned int count)
 {
 	DObject::BeginFrame ();
 
+	netdemo.seek_netdemotic = 0;
 	// run the realtics tics
 	while (count--)
 	{
@@ -1267,6 +1268,8 @@ BEGIN_COMMAND(netrew)
 {
 	if (netdemo.isPlaying())
 		netdemo.prevSnapshot();
+	else if (netdemo.isPaused())
+		netdemo.prevTic();
 }
 END_COMMAND(netrew)
 

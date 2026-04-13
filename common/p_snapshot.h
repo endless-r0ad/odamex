@@ -504,9 +504,10 @@ public:
 	void clearSnapshots();
 
 	int getMostRecentTime() const { return mMostRecent; }
+	int getMostRecentRewindTime() const { return rewindMostRecent; }
 
 	void addSnapshot(const PlayerSnapshot &snap);
-	PlayerSnapshot getSnapshot(int time) const;
+	PlayerSnapshot getSnapshot(int time, bool isRewinding = false) const;
 
 private:
 	bool mValidSnapshot(int time) const;
@@ -516,6 +517,7 @@ private:
 
 	PlayerSnapshot	mSnaps[NUM_SNAPSHOTS];
 	int				mMostRecent;
+	int				rewindMostRecent;
 };
 
 

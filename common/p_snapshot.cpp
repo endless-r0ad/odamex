@@ -410,7 +410,7 @@ void PlayerSnapshotManager::addSnapshot(const PlayerSnapshot &snap)
 	}
 
 	if (time > mMostRecent)
-		mMostRecent = time;
+		mMostRecent = rewindMostRecent = time;
 }
 
 int PlayerSnapshotManager::mFindValidSnapshot(int starttime, int endtime) const
@@ -444,8 +444,11 @@ int PlayerSnapshotManager::mFindValidSnapshot(int starttime, int endtime) const
 // If there is not a snapshot matching the time, one is generated using
 // interpolation or extrapolation.
 //
-PlayerSnapshot PlayerSnapshotManager::getSnapshot(int time) const
+PlayerSnapshot PlayerSnapshotManager::getSnapshot(int time, bool isRewinding) const
 {
+	if (time > 0 && mMostRecent == 0 && isRewinding)
+		return mSnaps[time % NUM_SNAPSHOTS];
+
 	if (time <= 0 || mMostRecent <= 0)
 		return PlayerSnapshot();
 

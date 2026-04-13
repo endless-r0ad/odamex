@@ -305,7 +305,10 @@ void CL_PredictWorld(void)
 
 	// Move the client to the last position received from the sever
 	int snaptime = p.snapshots.getMostRecentTime();
-	PlayerSnapshot snap = p.snapshots.getSnapshot(snaptime);
+	if (snaptime == 0 && netdemo.seek_netdemotic > 0)
+		snaptime = p.snapshots.getMostRecentRewindTime();
+
+	PlayerSnapshot snap = p.snapshots.getSnapshot(snaptime, netdemo.seek_netdemotic > 0);
 	snap.toPlayer(p);
 
 	while (++predtic < gametic)

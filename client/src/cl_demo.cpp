@@ -723,6 +723,7 @@ void NetDemo::readMessageBody(buf_t *netbuffer, uint32_t len)
 	if (cnt < len)
 	{
 		fatalError("Can not read netdemo message.");
+		stopPlaying();
 		return;
 	}
 

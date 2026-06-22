@@ -102,7 +102,7 @@ extern int st_faceindex;
 extern lumpHandle_t keys[NUMCARDS + NUMCARDS / 2];
 extern byte* Ranges;
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 
 typedef std::vector<const patch_t**> PathFreeList;
 

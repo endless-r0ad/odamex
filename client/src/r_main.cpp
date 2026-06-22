@@ -43,7 +43,7 @@
 #include "am_map.h"
 #include "cl_demo.h"
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 
 #define DISTMAP			2
 

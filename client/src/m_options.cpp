@@ -82,7 +82,7 @@ extern bool				OptionsActive;
 extern int				screenSize;
 extern short			skullAnimCounter;
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 
 EXTERN_CVAR(con_notifytime)
 EXTERN_CVAR(con_midtime)

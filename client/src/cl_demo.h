@@ -2,14 +2,15 @@
 
 #include "i_net.h"
 #include <deque>
+#include "netdemo.h"
 
-class NetDemo
+class ClientNetDemo : public NetDemo
 {
 public:
-	NetDemo();
-	~NetDemo();
-	NetDemo(const NetDemo &rhs);
-	NetDemo& operator=(const NetDemo &rhs);
+	ClientNetDemo();
+	~ClientNetDemo();
+	ClientNetDemo(const ClientNetDemo &rhs);
+	ClientNetDemo& operator=(const ClientNetDemo &rhs);
 
 	bool startPlaying(const std::string &filename);
 	bool startRecording(const std::string &filename);
@@ -24,10 +25,6 @@ public:
 	void capture(const std::basic_string<byte>& buffer);
 	void writeMapChange();
 	void writeIntermission();
-
-	[[nodiscard]] bool isRecording() const { return (state == NetDemo::st_recording); }
-	[[nodiscard]] bool isPlaying() const { return (state == NetDemo::st_playing); }
-	[[nodiscard]] bool isPaused() const { return (state == NetDemo::st_paused); }
 
 	[[nodiscard]] int getSpacing() const { return header.snapshot_spacing; }
 
@@ -44,29 +41,6 @@ public:
 	[[nodiscard]] const std::string &getFileName() const { return filename; }
 
 private:
-	typedef enum
-	{
-		st_stopped,
-		st_recording,
-		st_playing,
-		st_paused
-	} netdemo_state_t;
-
-	typedef enum
-	{
-		msg_packet		= 0xAA,
-		msg_snapshot,
-		msg_map_change,
-		msg_eof
-	} netdemo_message_t;
-
-	typedef struct
-	{
-		byte		type;
-		uint32_t	length;
-		uint32_t	gametic;
-	} message_header_t;
-
 	typedef struct
 	{
 		uint32_t	ticnum;
@@ -74,7 +48,7 @@ private:
 	} netdemo_index_entry_t;
 
 	void cleanUp();
-	void copy(NetDemo &to, const NetDemo &from);
+	void copy(ClientNetDemo &to, const ClientNetDemo &from);
 	void error(const std::string &message);
 	void fatalError(const std::string &message);
 	void reset();
@@ -102,36 +76,11 @@ private:
 	bool readMessageHeader(netdemo_message_t &type, uint32_t &len, uint32_t &tic) const;
 	void readMessageBody(buf_t *netbuffer, uint32_t len);
 
-	typedef struct
-	{
-		char		identifier[4];  		// "ODAD"
-		byte		version;
-		byte    	compression;    		// type of compression used
-		uint16_t	snapshot_spacing;		// number of gametics between indices
-		uint32_t	starting_gametic;		// the gametic the demo starts at
-		uint32_t	ending_gametic;			// the last gametic of the demo
-		byte		reserved[48];   		// for future use
-	} netdemo_header_t;
-
-	static constexpr size_t HEADER_SIZE = 64;
-	static constexpr size_t MESSAGE_HEADER_SIZE = 9;
-	static constexpr size_t INDEX_ENTRY_SIZE = 8;
-
-	static constexpr uint16_t SNAPSHOT_SPACING = 20 * TICRATE;
-
-	netdemo_state_t		state;
-	netdemo_state_t		oldstate;	// used when unpausing
-	std::string			filename;
-	FILE*				demofp;
-
 	std::deque<buf_t>   captured;
 
-	netdemo_header_t	header;
 	std::vector<netdemo_index_entry_t> snapshot_index;
 	std::vector<netdemo_index_entry_t> map_index;
 
-	std::vector<byte>	snapbuf;
-	int					netdemotic;
 	int					pause_netdemotic;
 	int					last_map_tic;
 };

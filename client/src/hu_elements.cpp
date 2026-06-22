@@ -43,7 +43,7 @@
 size_t P_NumPlayersInGame(void);
 argb_t CL_GetPlayerColor(const player_t&);
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 extern fixed_t FocalLengthX;
 extern byte* Ranges;
 

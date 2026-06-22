@@ -73,14 +73,13 @@ int LatestDemoVersion(const int version)
 	}
 }
 
-NetDemo::NetDemo()
-    : state(st_stopped), oldstate(st_stopped), filename(""), demofp(NULL), netdemotic(0),
-      pause_netdemotic(0), last_map_tic(0)
+ClientNetDemo::ClientNetDemo()
+    : pause_netdemotic(0), last_map_tic(0)
 {
 	memset(&header, 0, sizeof(header));
 }
 
-NetDemo::~NetDemo()
+ClientNetDemo::~ClientNetDemo()
 {
 	cleanUp();
 }
@@ -91,7 +90,7 @@ NetDemo::~NetDemo()
 //
 //   Copies the data from one NetDemo object to another
 
-void NetDemo::copy(NetDemo &to, const NetDemo &from)
+void ClientNetDemo::copy(ClientNetDemo &to, const ClientNetDemo &from)
 {
 	// free any memory used by structures and close open files
 	cleanUp();
@@ -107,19 +106,19 @@ void NetDemo::copy(NetDemo &to, const NetDemo &from)
 }
 
 
-NetDemo::NetDemo(const NetDemo &rhs)
+ClientNetDemo::ClientNetDemo(const ClientNetDemo &rhs)
 {
 	copy(*this, rhs);
 }
 
-NetDemo& NetDemo::operator=(const NetDemo &rhs)
+ClientNetDemo& ClientNetDemo::operator=(const ClientNetDemo &rhs)
 {
 	copy(*this, rhs);
 	return *this;
 }
 
 
-void NetDemo::reset()
+void ClientNetDemo::reset()
 {
 	cleanUp();
 
@@ -134,7 +133,7 @@ void NetDemo::reset()
 //   Attempts to close any open files and generally exit gracefully.
 //
 
-void NetDemo::cleanUp()
+void ClientNetDemo::cleanUp()
 {
 	if (isRecording())
 	{
@@ -161,7 +160,7 @@ void NetDemo::cleanUp()
  *
  * @param message Error message.
  */
-void NetDemo::error(const std::string &message)
+void ClientNetDemo::error(const std::string &message)
 {
 	cleanUp();
 	PrintFmt(PRINT_HIGH, "{}\n", message);
@@ -175,7 +174,7 @@ void NetDemo::error(const std::string &message)
  *
  * @param message Error message.
  */
-void NetDemo::fatalError(const std::string &message)
+void ClientNetDemo::fatalError(const std::string &message)
 {
 	cleanUp();
 	stopPlaying();
@@ -190,7 +189,7 @@ void NetDemo::fatalError(const std::string &message)
 //   Assumes that demofp has been opened correctly elsewhere.  Does not close
 //   the file.
 
-bool NetDemo::writeHeader()
+bool ClientNetDemo::writeHeader()
 {
 	memcpy(header.identifier, "ODAD", 4);
 	header.version = NETDEMOVER;
@@ -236,7 +235,7 @@ bool NetDemo::writeHeader()
 //   little-endian format to whatever the client's architecture uses.  Assumes
 //   that demofp has been opened correctly elsewhere.  Does not close the file.
 
-bool NetDemo::readHeader()
+bool ClientNetDemo::readHeader()
 {
 	fseek(demofp, 0, SEEK_SET);
 
@@ -272,7 +271,7 @@ bool NetDemo::readHeader()
 //
 //   called from startPlaying, seeks through the demo and populates 
 //   map_index and snapshot_index vecs
-void NetDemo::populateMessageIndexes()
+void ClientNetDemo::populateMessageIndexes()
 {
 	fseek(demofp, NetDemo::HEADER_SIZE, SEEK_SET);
 
@@ -323,7 +322,7 @@ void NetDemo::populateMessageIndexes()
 //   header is written which will be overwritten with the proper information
 //   in stopRecording().
 
-bool NetDemo::startRecording(const std::string &filename)
+bool ClientNetDemo::startRecording(const std::string &filename)
 {
 	this->filename = filename;
 
@@ -404,7 +403,7 @@ bool NetDemo::startRecording(const std::string &filename)
 //
 //
 
-bool NetDemo::startPlaying(const std::string &filename)
+bool ClientNetDemo::startPlaying(const std::string &filename)
 {
 	this->filename = filename;
 
@@ -481,7 +480,7 @@ bool NetDemo::startPlaying(const std::string &filename)
 //   Changes the netdemo's state to paused.  No messages will be read or written
 //   while in this state.
 
-bool NetDemo::pause()
+bool ClientNetDemo::pause()
 {
 	if (isPlaying())
 	{
@@ -500,7 +499,7 @@ bool NetDemo::pause()
 //   Changes the netdemo's state to its state prior to the call to pause()
 //
 
-bool NetDemo::resume()
+bool ClientNetDemo::resume()
 {
 	if (isPaused())
 	{
@@ -517,7 +516,7 @@ bool NetDemo::resume()
 //   Writes the netdemo index to file and rewrites the netdemo header before
 //   closing the netdemo file.
 
-bool NetDemo::stopRecording()
+bool ClientNetDemo::stopRecording()
 {
 	if (!isRecording())
 	{
@@ -559,7 +558,7 @@ bool NetDemo::stopRecording()
 //   Closes the netdemo file and sets the state to stopped
 //
 
-bool NetDemo::stopPlaying()
+bool ClientNetDemo::stopPlaying()
 {
 	state = NetDemo::st_stopped;
 	SZ_Clear(&net_message);
@@ -584,7 +583,7 @@ bool NetDemo::stopPlaying()
 //
 //   Generates a message indicating the current position and angle of the
 //   consoleplayer, taking the place of ticcmds.
-void NetDemo::writeLocalCmd(buf_t *netbuffer) const
+void ClientNetDemo::writeLocalCmd(buf_t *netbuffer) const
 {
 	// Record the local player's data
 	player_t& player = consoleplayer();
@@ -595,7 +594,7 @@ void NetDemo::writeLocalCmd(buf_t *netbuffer) const
 }
 
 
-void NetDemo::writeChunk(const byte *data, size_t size, netdemo_message_t type)
+void ClientNetDemo::writeChunk(const byte *data, size_t size, netdemo_message_t type)
 {
 	message_header_t msgheader;
 	memset(&msgheader, 0, sizeof(msgheader));
@@ -626,7 +625,7 @@ void NetDemo::writeChunk(const byte *data, size_t size, netdemo_message_t type)
 //
 //    Returns true if it is the appropriate time to write a snapshot
 //
-bool NetDemo::atSnapshotInterval()
+bool ClientNetDemo::atSnapshotInterval()
 {
 	if (!connected || last_map_tic == 0 || gamestate != GS_LEVEL)
 		return false;
@@ -638,7 +637,7 @@ bool NetDemo::atSnapshotInterval()
 }
 
 
-void NetDemo::ticker()
+void ClientNetDemo::ticker()
 {
 	netdemotic++;
 	if (netdemotic == pause_netdemotic)
@@ -656,7 +655,7 @@ void NetDemo::ticker()
 //   input and writes to the netdemo file.
 //
 
-void NetDemo::writeMessages()
+void ClientNetDemo::writeMessages()
 {
 	if (!isRecording())
 		return;
@@ -703,7 +702,7 @@ void NetDemo::writeMessages()
 //   len and tic parameters.
 //   Returns false upon file read error.
 
-bool NetDemo::readMessageHeader(netdemo_message_t &type, uint32_t &len, uint32_t &tic) const
+bool ClientNetDemo::readMessageHeader(netdemo_message_t &type, uint32_t &len, uint32_t &tic) const
 {
 	len = tic = 0;
 
@@ -738,7 +737,7 @@ bool NetDemo::readMessageHeader(netdemo_message_t &type, uint32_t &len, uint32_t
 //   message in netbuffer.
 //
 
-void NetDemo::readMessageBody(buf_t *netbuffer, uint32_t len)
+void ClientNetDemo::readMessageBody(buf_t *netbuffer, uint32_t len)
 {
 	auto msgdata = std::make_unique<char[]>(len);
 
@@ -798,7 +797,7 @@ void NetDemo::readMessageBody(buf_t *netbuffer, uint32_t len)
 //
 //   Snapshots and map changes are skipped as they are directly read elsewhere.
 
-void NetDemo::readMessages(buf_t* netbuffer)
+void ClientNetDemo::readMessages(buf_t* netbuffer)
 {
 	if (!isPlaying())
 	{
@@ -838,7 +837,7 @@ void NetDemo::readMessages(buf_t* netbuffer)
 //   Copies data from inputbuffer just before the game parses it
 //
 
-void NetDemo::capture(const buf_t* inputbuffer)
+void ClientNetDemo::capture(const buf_t* inputbuffer)
 {
 	if (!isRecording())
 	{
@@ -851,7 +850,7 @@ void NetDemo::capture(const buf_t* inputbuffer)
 	}
 }
 
-void NetDemo::capture(const std::basic_string<byte>& buffer)
+void ClientNetDemo::capture(const std::basic_string<byte>& buffer)
 {
 	if (isRecording())
 	{
@@ -873,7 +872,7 @@ void NetDemo::capture(const std::basic_string<byte>& buffer)
 //   accurate.
 //
 
-void NetDemo::writeLauncherSequence(buf_t *netbuffer)
+void ClientNetDemo::writeLauncherSequence(buf_t *netbuffer)
 {
 	// Server sends launcher info
 	MSG_WriteLong	(netbuffer, PROTO_CHALLENGE);
@@ -999,7 +998,7 @@ void NetDemo::writeLauncherSequence(buf_t *netbuffer)
 //   the packet with sequence number 0 and writes them to netbuffer.
 //
 
-void NetDemo::writeConnectionSequence(buf_t *netbuffer)
+void ClientNetDemo::writeConnectionSequence(buf_t *netbuffer)
 {
     PacketHeaderType header {0};
 
@@ -1039,7 +1038,7 @@ void NetDemo::writeConnectionSequence(buf_t *netbuffer)
 //		Returns the snapshot that preceeds the ticnum parameter or returns
 //		NULL if the ticnum is out of bounds.
 //
-const NetDemo::netdemo_index_entry_t *NetDemo::snapshotLookup(int ticnum) const
+const ClientNetDemo::netdemo_index_entry_t *ClientNetDemo::snapshotLookup(int ticnum) const
 {
 	int index = (ticnum - header.starting_gametic) / header.snapshot_spacing - 1;
 
@@ -1059,9 +1058,9 @@ const NetDemo::netdemo_index_entry_t *NetDemo::snapshotLookup(int ticnum) const
 //		Returns the index into the snapshot_index vector that immediately
 //		preceeds the current gametic.
 //
-int NetDemo::getCurrentSnapshotIndex() const
+int ClientNetDemo::getCurrentSnapshotIndex() const
 {
-	for (int i = 0; i < snapshot_index.size() - 1; i++)
+	for (size_t i = 0; i < snapshot_index.size() - 1; i++)
 	{
 		if (static_cast<int>(snapshot_index[i + 1].ticnum) > gametic)
 			return i;
@@ -1077,9 +1076,9 @@ int NetDemo::getCurrentSnapshotIndex() const
 //		Returns the index into the map_index vector for the map that the
 //		is currently being played.
 //
-int NetDemo::getCurrentMapIndex() const
+int ClientNetDemo::getCurrentMapIndex() const
 {
-	for (int i = 0; i < map_index.size() - 1; i++)
+	for (size_t i = 0; i < map_index.size() - 1; i++)
 	{
 		if (static_cast<int>(map_index[i + 1].ticnum) > gametic)
 			return i;
@@ -1093,7 +1092,7 @@ int NetDemo::getCurrentMapIndex() const
 //
 //		Advance to the next gametic.
 //
-void NetDemo::nextTic()
+void ClientNetDemo::nextTic()
 {
 	if (!isPaused())
 		return;
@@ -1109,7 +1108,7 @@ void NetDemo::nextTic()
 //		Reads the snapshot that follows the current gametic and
 //		restores the world state to the snapshot
 //
-void NetDemo::nextSnapshot()
+void ClientNetDemo::nextSnapshot()
 {
 	if (snapshot_index.empty())
 		return;
@@ -1130,7 +1129,7 @@ void NetDemo::nextSnapshot()
 //		Reads the snapshot that preceeds the current gametic and
 //		restores the world state to the snapshot
 //
-void NetDemo::prevSnapshot()
+void ClientNetDemo::prevSnapshot()
 {
 	if (snapshot_index.empty())
 		return;
@@ -1149,7 +1148,7 @@ void NetDemo::prevSnapshot()
 //		Reads the snapshot at the begining of the next map and
 //		restores the world state to the snapshot
 //
-void NetDemo::nextMap()
+void ClientNetDemo::nextMap()
 {
 	if (map_index.empty())
 		return;
@@ -1158,7 +1157,7 @@ void NetDemo::nextMap()
 	if (nextmapindex >= map_index.size())
 		return;
 
-	const NetDemo::netdemo_index_entry_t *snap = &map_index[nextmapindex];
+	const ClientNetDemo::netdemo_index_entry_t *snap = &map_index[nextmapindex];
 
 	readSnapshot(snap);
 }
@@ -1169,7 +1168,7 @@ void NetDemo::nextMap()
 //		Reads the snapshot at the begining of the previous map and
 //		restores the world state to the snapshot
 //
-void NetDemo::prevMap()
+void ClientNetDemo::prevMap()
 {
 	if (map_index.empty())
 		return;
@@ -1178,7 +1177,7 @@ void NetDemo::prevMap()
 	if (prevmapindex < 0)
 		prevmapindex = 0;
 
-	const NetDemo::netdemo_index_entry_t *snap = &map_index[prevmapindex];
+	const ClientNetDemo::netdemo_index_entry_t *snap = &map_index[prevmapindex];
 
 	readSnapshot(snap);
 }
@@ -1188,7 +1187,7 @@ void NetDemo::prevMap()
 // readSnapshot()
 //
 //
-void NetDemo::readSnapshot(const netdemo_index_entry_t *snap)
+void ClientNetDemo::readSnapshot(const netdemo_index_entry_t *snap)
 {
 	if (!isPlaying() || !snap)
 		return;
@@ -1227,7 +1226,7 @@ void NetDemo::readSnapshot(const netdemo_index_entry_t *snap)
 //
 //   Returns the total length of the demo in seconds
 //
-int NetDemo::calculateTotalTime() const
+int ClientNetDemo::calculateTotalTime() const
 {
 	if (!isPlaying() && !isPaused())
 		return 0;
@@ -1241,7 +1240,7 @@ int NetDemo::calculateTotalTime() const
 //
 //   Returns the number of seconds since the demo started playing
 //
-int NetDemo::calculateTimeElapsed() const
+int ClientNetDemo::calculateTimeElapsed() const
 {
 	if (!isPlaying() && !isPaused())
 		return 0;
@@ -1255,7 +1254,7 @@ int NetDemo::calculateTimeElapsed() const
 	return elapsed;
 }
 
-const std::vector<int> NetDemo::getMapChangeTimes() const
+const std::vector<int> ClientNetDemo::getMapChangeTimes() const
 {
 	std::vector<int> times;
 
@@ -1269,7 +1268,7 @@ const std::vector<int> NetDemo::getMapChangeTimes() const
 }
 
 
-void NetDemo::writeMapChange()
+void ClientNetDemo::writeMapChange()
 {
 	if (connected && gamestate == GS_LEVEL)
 	{
@@ -1279,7 +1278,7 @@ void NetDemo::writeMapChange()
 	}
 }
 
-void NetDemo::writeIntermission()
+void ClientNetDemo::writeIntermission()
 {
 	if (connected && gamestate == GS_INTERMISSION)
 	{
@@ -1296,7 +1295,7 @@ void NetDemo::writeIntermission()
 //   writing the connection sequence at the start of a netdemo.
 //
 
-void NetDemo::writeSnapshotData(std::vector<byte>& buf)
+void ClientNetDemo::writeSnapshotData(std::vector<byte>& buf)
 {
 	G_SnapshotLevel();
 
@@ -1393,7 +1392,7 @@ void NetDemo::writeSnapshotData(std::vector<byte>& buf)
 }
 
 
-void NetDemo::readSnapshotData(std::vector<byte>& buf)
+void ClientNetDemo::readSnapshotData(std::vector<byte>& buf)
 {
 	byte cid = consoleplayer_id;
 	byte did = displayplayer_id;

@@ -22,6 +22,7 @@
 #include "Packet.h"
 
 #include "SequenceSender.h"
+#include "netdemo.h"
 
 Packet::Packet() :
 	m_outgoingPacketBuffer {MAX_UDP_PACKET}
@@ -103,7 +104,7 @@ size_t Packet::ReSend(int sequence, const buf_t& i_dataBuffer, const netadr_t& i
 	return CompressAndSend(i_dest);
 }
 
-size_t Packet::Send(int i_currentTic, SequenceSender& i_sender, const netadr_t& i_dest)
+size_t Packet::Send(int i_currentTic, SequenceSender& i_sender, const netadr_t& i_dest, NetDemo* netdemo)
 {
 	if (m_header.reliableSize)
 	{
@@ -130,6 +131,11 @@ size_t Packet::Send(int i_currentTic, SequenceSender& i_sender, const netadr_t& 
 
 	m_outgoingPacketBuffer.SeekWrite(0, buf_t::BT_START);
 	m_header.Pack(m_outgoingPacketBuffer);
+
+	if ((m_outgoingPacketBuffer.size() > PacketHeaderType::PACKET_HEADER_SIZE) && netdemo)
+	{
+		netdemo->captured.emplace_back(m_outgoingPacketBuffer);
+	}
 
 	return CompressAndSend(i_dest);
 }

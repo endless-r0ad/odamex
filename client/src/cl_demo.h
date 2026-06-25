@@ -76,8 +76,6 @@ private:
 	bool readMessageHeader(netdemo_message_t &type, uint32_t &len, uint32_t &tic) const;
 	void readMessageBody(buf_t *netbuffer, uint32_t len);
 
-	std::deque<buf_t>   captured;
-
 	std::vector<netdemo_index_entry_t> snapshot_index;
 	std::vector<netdemo_index_entry_t> map_index;
 

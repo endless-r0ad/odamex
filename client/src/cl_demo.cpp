@@ -1502,7 +1502,8 @@ void ClientNetDemo::readSnapshotData(std::vector<byte>& buf)
 		}
 	}
 
-	arc >> rollerState;
+	if (0)
+		arc >> rollerState;
 
 	multiplayer = true;
 

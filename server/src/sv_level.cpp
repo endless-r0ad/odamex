@@ -232,6 +232,9 @@ void G_ChangeMap()
 {
 	unnatural_level_progression = false;
 
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
+
 	// Skip the maplist to go to the desired level in case of a lobby map.
 	if (level.flags & LEVEL_LOBBYSPECIAL && level.nextmap[0])
 	{
@@ -267,6 +270,11 @@ void G_ChangeMap()
 			}
 		}
 
+		if (netdemo.isRecording())
+		{
+			netdemo.startRecording("odasrv_netdemo_next.odd");
+			netdemo.writeMapChange();
+		}
 		// run script at the end of each map
 		// [ML] 8/22/2010: There are examples in the wiki that outright don't work
 		// when onlcvars (addcommandstring's second param) is true.  Is there a
@@ -278,6 +286,10 @@ void G_ChangeMap()
 
 // Change to a map based on a maplist index.
 void G_ChangeMap(size_t index) {
+
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
+
 	maplist_entry_t maplist_entry;
 	if (!Maplist::instance().get_map_by_index(index, maplist_entry)) {
 		// That maplist index doesn't actually exist
@@ -291,6 +303,12 @@ void G_ChangeMap(size_t index) {
 	// Set the new map as the current map
 	Maplist::instance().set_index(index);
 
+	if (netdemo.isRecording())
+	{
+		netdemo.startRecording("odasrv_netdemo_next.odd");
+		netdemo.writeMapChange();
+	}
+
 	// run script at the end of each map
 	// [ML] 8/22/2010: There are examples in the wiki that outright don't work
 	// when onlcvars (addcommandstring's second param) is true.  Is there a
@@ -302,6 +320,9 @@ void G_ChangeMap(size_t index) {
 // Determine first map to load on startup
 void G_ChangeMapStartup()
 {
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
+
 	unnatural_level_progression = false;
 
 	maplist_entry_t lobby_entry = Maplist::instance().get_lobbymap();
@@ -335,6 +356,12 @@ void G_ChangeMapStartup()
 		}
 	}
 
+	if (netdemo.isRecording())
+	{
+		netdemo.startRecording("odasrv_netdemo_next.odd");
+		netdemo.writeMapChange();
+	}
+
 	// run script at the end of each map
 	// [ML] 8/22/2010: There are examples in the wiki that outright don't work
 	// when onlcvars (addcommandstring's second param) is true.  Is there a
@@ -345,8 +372,17 @@ void G_ChangeMapStartup()
 
 // Restart the current map.
 void G_RestartMap() {
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
+	
 	// Restart the current map.
 	G_DeferedInitNew(level.mapname);
+
+	if (netdemo.isRecording())
+	{
+		netdemo.startRecording("odasrv_netdemo_next.odd");
+		netdemo.writeMapChange();
+	}
 
 	// run script at the end of each map
 	// [ML] 8/22/2010: There are examples in the wiki that outright don't work
@@ -816,6 +852,11 @@ void G_DoResetLevel(bool full_reset)
 			continue;
 
 		SV_ClientFullUpdate(player);
+	}
+
+	if (netdemo.isRecording())
+	{
+		netdemo.writeMapChange();
 	}
 }
 

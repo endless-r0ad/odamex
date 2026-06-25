@@ -23,6 +23,7 @@
 #pragma once
 
 #include "i_net.h"
+#include <deque>
 
 struct NetDemo
 {
@@ -77,5 +78,6 @@ struct NetDemo
 
     netdemo_header_t	header;
 
+	std::deque<buf_t>   captured;
 	std::vector<byte>	snapbuf;
 };

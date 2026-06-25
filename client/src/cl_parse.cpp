@@ -3216,7 +3216,7 @@ static void CL_NetdemoCap(const odaproto::clc::NetdemoCap* msg)
 	odaproto::clc::PlayerInput& currentInputMessage = localcmds[gametic % MAXSAVETICS];
 	currentInputMessage.ParseFromString(msg->packed_player_input());
 
-	player_t& clientPlayer = consoleplayer();
+	player_t& clientPlayer = CL_FindPlayer(msg->actor().netid());
 
 	// Note clientPlayer->viewz should not be set with the value from the demo here
 	// it is an aggregate value and will be set correctly later

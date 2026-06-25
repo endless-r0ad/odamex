@@ -24,6 +24,7 @@
 
 #include "odamex.h"
 
+#include "sv_demo.h"
 #include "win32inc.h"
 #ifdef _WIN32
 #   define WIN32_LEAN_AND_MEAN
@@ -49,6 +50,7 @@
 #include "sv_master.h"
 #include "i_system.h"
 #include "i_time.h"
+#include "i_net.h"
 #include "c_console.h"
 #include "c_dispatch.h"
 #include "m_argv.h"
@@ -91,6 +93,7 @@ extern level_locals_t level;
 
 constexpr int MAX_HIDDEN_MOBJ_UPDATES = 160;
 
+ServerNetDemo netdemo;
 
 // Unnatural Level Progression.  True if we've used 'map' or another command
 // to switch to a specific map out of order, otherwise false.
@@ -458,6 +461,35 @@ BEGIN_COMMAND (exit)
 	SV_QuitCommand();
 }
 END_COMMAND (exit)
+
+BEGIN_COMMAND(stopnetdemo)
+{
+	if (netdemo.isRecording())
+	{
+		netdemo.stopRecording();
+	}
+}
+END_COMMAND(stopnetdemo)
+
+BEGIN_COMMAND(netrecord)
+{
+	if (netdemo.isRecording())
+	{
+		PrintFmt(PRINT_HIGH, "Already recording a netdemo.  Please stop recording before "\
+		         "beginning a new netdemo recording.\n");
+		return;
+	}
+
+	std::string filename = "odasrv_netdemo.odd";
+	//if (argc > 1 && strlen(argv[1]) > 0)
+	//	filename = CL_GenerateNetDemoFileName(argv[1]);
+	//else
+	//	filename = CL_GenerateNetDemoFileName();
+
+	if (netdemo.startRecording(filename))
+		netdemo.writeMapChange();
+}
+END_COMMAND(netrecord)
 
 static void SendLevelState(SerializedLevelState sls)
 {
@@ -1602,7 +1634,7 @@ int SV_UpdateHiddenMobj(player_t& pl, AActor *mo, int updated, AwarenessEnum new
 
 bool SV_SendPacket(player_t &pl)
 {
-	return pl.client.messenger.SendAll(gametic, pl.client.address) != MessageResultEnum::ABORT;
+	return pl.client.messenger.SendAll(gametic, pl.client.address, &netdemo) != MessageResultEnum::ABORT;
 }
 
 void SV_BroadcastNoiseAlert(const sector_t& sector)
@@ -3648,6 +3680,16 @@ void SV_WriteCommands(void)
 	// Palm off the job of writing the player messages onto the worker threads.
 	std::vector<std::future<void> > futures;
 
+	static buf_t netdemobuf(1024);
+
+	// allows watching empty serverside netdemo with freecam
+	if (players.empty() && netdemo.isRecording())
+	{
+		SZ_Clear(&netdemobuf);
+		MSG_WriteSVCBuffer(&netdemobuf, SVC_ServerGametic(gametic, 0, 0));
+		netdemo.captured.push_back(netdemobuf);	
+	}
+
 	for (player_t& player : players)
 	{
 		// Players that are on their way out are serviced elsewhere.
@@ -3755,10 +3797,18 @@ void SV_ProcessPlayerCmd(player_t &player)
 	#endif	// _TICCMD_QUEUE_DEBUG_
 
 	int num_cmds = SV_CalculateNumTiccmds(player);
+	static buf_t netdemobuf(1024);
 
 	for (int i = 0; i < num_cmds && !player.cmdqueue.empty(); i++)
 	{
 		odaproto::clc::PlayerInput& netcmd = player.cmdqueue.front();
+
+		if (netdemo.isRecording())
+		{
+			SZ_Clear(&netdemobuf);
+			MSG_WriteSVCBuffer(&netdemobuf, CLC_NetdemoCap(player, netcmd, player.client.messenger));
+			netdemo.captured.push_back(netdemobuf);
+		}
 
 		// Please note that we have a safety check in SV_CalculateNumTiccmds to ensure that
 		// if we're processing more than one command in this loop, the inventory check will
@@ -4628,6 +4678,9 @@ void SV_GameTics (void)
 		break;
 	}
 
+	if (netdemo.isRecording() && netdemo.atSnapshotInterval())
+		netdemo.writeSnapshotInterval();
+
 	for (auto& player : players)
 		SV_ProcessPlayerCmd(player);
 }
@@ -4710,6 +4763,9 @@ void SV_StepTics(uint64_t count)
 
 		SV_CheckTimeouts();
 		SV_DestroyFinishedMovingSectors();
+
+		if (netdemo.isRecording())
+			netdemo.writeMessages(players.size());
 
 		// increment player_t::GameTime for all players once a second
 		static int TicCount = 0;

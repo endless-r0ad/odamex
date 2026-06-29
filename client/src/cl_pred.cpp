@@ -178,34 +178,36 @@ static void CL_PredictSectors(int predtic)
 }
 
 //
-// CL_PredictSpying
+// CL_PredictRemotePlayers
 //
-// Handles calling the thinker routines for the player being spied with spynext.
+// Handles calling the thinker routines for the remote players.
 //
-static void CL_PredictSpying()
+static void CL_PredictRemotePlayers()
 {
-	player_t& player = displayplayer();
-	if (consoleplayer_id == displayplayer_id)
-		return;
+	for (auto& player : players)
+	{
+		if (player.ingame() && player.mo && player.id != consoleplayer_id)
+		{
+			// Save and restore the prevangle and prevpitch so that the client viewangle interpolation
+			// actually works when spying the remote player.
+			//
+			// This is needed because the spy target's prevangle and prevpitch are already accurate
+			// thanks to CL_SimulatePlayers, but P_PlayerThink overwrites them, assuming that it's
+			// ultimately responsible for moving players.  That just isn't the case for spied remote
+			// players.  We can simply restore the overwritten states to allow interpolation to work.
 
-	// Save and restore the prevangle and prevpitch so that the client viewangle interpolation
-	// actually works when spying.
-	//
-	// This is needed because the spy target's prevangle and prevpitch are already accurate
-	// thanks to CL_SimulatePlayers, but P_PlayerThink overwrites them, assuming that it's
-	// ultimately responsible for moving players.  That just isn't the case for spied remote
-	// players.  We can simply restore the overwritten states to allow interpolation to work.
+			const auto prevangle = player.mo->prevangle;
+			const auto prevpitch = player.mo->prevpitch;
 
-	const auto prevangle = player.mo->prevangle;
-	const auto prevpitch = player.mo->prevpitch;
+			predicting = false;
 
-	predicting = false;
+			P_PlayerThink(player);
+			P_CalcHeight(player);
 
-	P_PlayerThink(player);
-	P_CalcHeight(player);
-
-	player.mo->prevangle = prevangle;
-	player.mo->prevpitch = prevpitch;
+			player.mo->prevangle = prevangle;
+			player.mo->prevpitch = prevpitch;
+		}
+	}
 }
 
 //
@@ -272,8 +274,7 @@ void CL_PredictWorld(void)
 	// tenatively tell the netgraph that our prediction was successful
 	netgraph.setMisprediction(false);
 
-	if (consoleplayer_id != displayplayer_id)
-		CL_PredictSpying();
+	CL_PredictRemotePlayers();
 
 	// [SL] 2012-03-10 - Spectators can predict their position without server
 	// correction.  Handle them as a special case and leave.

@@ -2485,19 +2485,19 @@ static void CL_PlayerState(const odaproto::svc::PlayerState* msg)
 		player.ammo[i] = ammo[i];
 
 	for (int i = 0; i < NUMPSPRITES; i++)
-  {
-    if (i == ps_flash && stnum[i] == S_NULL)
-      player.extralight = 0;
+	{
+		if (i == ps_flash && stnum[i] == S_NULL)
+			player.extralight = 0;
 
-    const fixed_t prevsy = player.psprites[player.psprnum].sy;
-    const fixed_t prevsx = player.psprites[player.psprnum].sx;
-    
-    P_SetPsprite(player, i, stnum[i]);
+		const fixed_t prevsy = player.psprites[player.psprnum].sy;
+		const fixed_t prevsx = player.psprites[player.psprnum].sx;
 
-    // CL_PredictSpying will correctly lower/raise the weap
-    player.psprites[player.psprnum].sy = prevsy;
-    player.psprites[player.psprnum].sx = prevsx;
-  }
+		P_SetPsprite(player, i, stnum[i]);
+
+		// CL_PredictSpying will correctly lower/raise the weap
+		player.psprites[player.psprnum].sy = prevsy;
+		player.psprites[player.psprnum].sx = prevsx;
+	}
 
 	for (int i = 0; i < NUMPOWERS; i++)
 		player.powers[i] = powerups[i];

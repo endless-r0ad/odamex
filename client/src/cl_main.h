@@ -42,7 +42,7 @@ extern int       connecttimeout;
 extern bool      noservermsgs;
 extern int       last_received;
 
-extern NetDemo           netdemo;
+extern ClientNetDemo           netdemo;
 extern OdaMessenger      messenger;
 extern PlayerStateRoller rollerState;
 

@@ -138,7 +138,7 @@ std::string digest;
 std::string server_host = "";	// hostname of server
 
 // [SL] 2011-06-27 - Class to record and playback network recordings
-NetDemo netdemo;
+ClientNetDemo netdemo;
 // [SL] 2011-07-06 - not really connected (playing back a netdemo)
 bool forcenetdemosplit = false;		// need to split demo due to svc_reconnect
 

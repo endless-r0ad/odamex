@@ -38,7 +38,7 @@
 #include "g_gametype.h"
 #include "cl_responderkeys.h"
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 
 /* Most of these bindings are equivalent
  * to the original DOOM's keymappings.

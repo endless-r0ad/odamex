@@ -58,7 +58,7 @@
 
 #include "cl_demo.h"
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 
 static constexpr int MAX_LINE_LENGTH = 8192;
 

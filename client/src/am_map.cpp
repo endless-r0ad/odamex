@@ -259,7 +259,7 @@ static int markpointnum = 0;                  // next point to be assigned
 
 static bool stopped = true;
 
-extern NetDemo netdemo;
+extern ClientNetDemo netdemo;
 
 void AM_clearMarks();
 void AM_addMark();

@@ -28,10 +28,12 @@
 #include "d_player.h"
 #include "i_net.h"
 #include "g_gametype.h"
+#include "sv_demo.h"
 
 #include <json/json.h>
 
 extern bool keysfound[NUMCARDS];
+extern ServerNetDemo netdemo;
 
 // The server tracks ping up until 999 msec.  This is the most that we record into
 // the player structure and the point at which we turn off reliable message

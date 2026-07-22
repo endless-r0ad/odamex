@@ -70,6 +70,7 @@
 #include "m_wdlstats.h"
 #include "m_cheat.h"
 #include "m_instrumentation.h"
+#include "sv_demo.h"
 
 #include <algorithm>
 #include <condition_variable>
@@ -91,6 +92,7 @@ extern level_locals_t level;
 
 constexpr int MAX_HIDDEN_MOBJ_UPDATES = 160;
 
+ServerNetDemo netdemo;
 
 // Unnatural Level Progression.  True if we've used 'map' or another command
 // to switch to a specific map out of order, otherwise false.
@@ -458,6 +460,43 @@ BEGIN_COMMAND (exit)
 	SV_QuitCommand();
 }
 END_COMMAND (exit)
+
+BEGIN_COMMAND(stopnetdemo)
+{
+	if (netdemo.isRecording())
+	{
+		netdemo.stopRecording();
+	}
+}
+END_COMMAND(stopnetdemo)
+
+BEGIN_COMMAND(netrecord)
+{
+	if (players.empty())
+	{
+		PrintFmt(PRINT_HIGH, "Cannot record a server-side demo with 0 players in server");
+		return;
+	}
+
+	if (netdemo.isRecording())
+	{
+		PrintFmt(PRINT_HIGH, "Already recording a netdemo.  Please stop recording before "\
+		         "beginning a new netdemo recording.\n");
+		return;
+	}
+
+	std::string filename = "odasrv_netdemo.odd";
+	if (argc > 1 && strlen(argv[1]) > 0)
+		filename = argv[1];
+	//else
+	//	filename = CL_GenerateNetDemoFileName();
+
+	if (netdemo.startRecording(filename))
+	{
+		netdemo.writeMapChange();
+	}
+}
+END_COMMAND(netrecord)
 
 static void SendLevelState(SerializedLevelState sls)
 {
@@ -1605,7 +1644,7 @@ int SV_UpdateHiddenMobj(player_t& pl, AActor *mo, int updated, AwarenessEnum new
 
 MessageResultEnum SV_SendPacket(player_t &pl)
 {
-	return pl.client.messenger.SendAll(gametic, pl.client.address);
+	return pl.client.messenger.SendAll(gametic, pl.client.address, netdemo.isRecording() ? &netdemo : nullptr);
 }
 
 void SV_BroadcastNoiseAlert(const sector_t& sector)
@@ -3844,6 +3883,7 @@ void SV_ProcessPlayerCmd(player_t &player)
 	#endif	// _TICCMD_QUEUE_DEBUG_
 
 	int num_cmds = SV_CalculateNumTiccmds(player);
+	static buf_t netdemobuf(1024);
 
 	for (int i = 0; i < num_cmds && !player.cmdqueue.empty(); i++)
 	{
@@ -3884,6 +3924,13 @@ void SV_ProcessPlayerCmd(player_t &player)
 		#endif
 
 		CLC_UnpackPlayerInputMessageToPlayer(netcmd, player);
+
+		if (netdemo.isRecording())
+		{
+			SZ_Clear(&netdemobuf);
+			MSG_WriteSVCBuffer(&netdemobuf, CLC_NetdemoCap(player, netcmd, player.client.messenger));
+			netdemo.captured.push_back(netdemobuf);
+		}
 
 		if (!sv_freelook)
 			player.mo->pitch = 0;
@@ -4799,6 +4846,9 @@ void SV_StepTics(uint64_t count)
 
 		SV_CheckTimeouts();
 		SV_DestroyFinishedMovingSectors();
+
+		if (netdemo.isRecording())
+			netdemo.writeMessages();
 
 		// increment player_t::GameTime for all players once a second
 		static int TicCount = 0;

@@ -275,46 +275,6 @@ void CTF_DrawHud (void)
 	}
 }
 
-FArchive &operator<< (FArchive &arc, flagdata &flag)
-{
-	int netid = flag.actor ? flag.actor->netid : 0;
-
-	arc << flag.flaglocated
-		<< netid
-		<< flag.flagger
-		<< flag.pickup_time
-		<< flag.x << flag.y << flag.z
-		<< flag.timeout
-		<< static_cast<byte>(flag.state)
-		<< flag.sb_tick;
-
-	arc << 0;
-
-	return arc;
-}
-
-FArchive &operator>> (FArchive &arc, flagdata &flag)
-{
-	int netid;
-	byte state;
-	int dummy;
-
-	arc >> flag.flaglocated
-		>> netid
-		>> flag.flagger
-		>> flag.pickup_time
-		>> flag.x >> flag.y >> flag.z
-		>> flag.timeout
-		>> state
-		>> flag.sb_tick;
-
-	arc >> dummy;
-
-	flag.state = static_cast<flag_state_t>(state);
-	flag.actor = AActor::AActorPtr();
-
-	return arc;
-}
 
 // 0: Your sound effect
 // 1: Enemy sound effect

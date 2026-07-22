@@ -232,6 +232,11 @@ void G_ChangeMap()
 {
 	unnatural_level_progression = false;
 
+	bool was_recording = netdemo.isRecording();
+
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
+
 	// Skip the maplist to go to the desired level in case of a lobby map.
 	if (level.flags & LEVEL_LOBBYSPECIAL && level.nextmap[0])
 	{
@@ -274,6 +279,11 @@ void G_ChangeMap()
 		if (strlen(sv_endmapscript.cstring()))
 			AddCommandString(sv_endmapscript.str());
 	}
+	if (was_recording && not players.empty())
+	{
+		netdemo.startRecording("odasrv_next.odd");
+		netdemo.writeMapChange();
+	}
 }
 
 // Change to a map based on a maplist index.
@@ -284,6 +294,11 @@ void G_ChangeMap(size_t index) {
 		PrintFmt(PRINT_HIGH, "{}\n", Maplist::instance().get_error());
 		return;
 	}
+
+	bool was_recording = netdemo.isRecording();
+
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
 
 	std::string wadstr = C_EscapeWadList(maplist_entry.wads);
 	G_LoadWadString(wadstr, maplist_entry.map, maplist_entry.lastmaps);
@@ -297,6 +312,12 @@ void G_ChangeMap(size_t index) {
 	// reason why the mapscripts ahve to be safe mode?
 	if(strlen(sv_endmapscript.cstring()))
 		AddCommandString(sv_endmapscript.str());
+
+	if (was_recording && not players.empty())
+	{
+		netdemo.startRecording("odasrv_next.odd");
+		netdemo.writeMapChange();
+	}
 }
 
 // Determine first map to load on startup
@@ -305,6 +326,11 @@ void G_ChangeMapStartup()
 	unnatural_level_progression = false;
 
 	maplist_entry_t lobby_entry = Maplist::instance().get_lobbymap();
+
+	bool was_recording = netdemo.isRecording();
+
+	if (netdemo.isRecording())
+		netdemo.stopRecording();
 
 	if (!Maplist::instance().lobbyempty())
 	{
@@ -335,6 +361,12 @@ void G_ChangeMapStartup()
 		}
 	}
 
+	if (was_recording && not players.empty())
+	{
+		netdemo.startRecording("odasrv_next.odd");
+		netdemo.writeMapChange();
+	}
+	
 	// run script at the end of each map
 	// [ML] 8/22/2010: There are examples in the wiki that outright don't work
 	// when onlcvars (addcommandstring's second param) is true.  Is there a

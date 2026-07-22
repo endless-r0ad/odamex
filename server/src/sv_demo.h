@@ -21,9 +21,7 @@ public:
 	bool startRecording(const std::string &filename);
 	bool stopRecording();
 
-	void writeMessages();
-	void capture(const buf_t* netbuffer);
-	void capture(const std::basic_string<byte>& buffer);
+	void writeMessages(bool isNetdemoStartup = false);
 	void writeMapChange();
 	void writeIntermission();
 	bool atSnapshotInterval();

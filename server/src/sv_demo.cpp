@@ -163,18 +163,18 @@ bool ServerNetDemo::startRecording(const std::string &filename)
 		SZ_Clear(&tempbuf);
 		writeLauncherSequence(&tempbuf);
 		capture(&tempbuf);
-		writeMessages();
+		writeMessages(true);
 
 		// Fake the server's side of the connection sequence
 		SZ_Clear(&tempbuf);
 		writeConnectionSequence(&tempbuf);
 		capture(&tempbuf);
-		writeMessages();
+		writeMessages(true);
 
 		SZ_Clear(&tempbuf);
 		MSG_WriteSVCBuffer(&tempbuf, odaproto::clc::NetDemoLoadSnap());
 		capture(&tempbuf);
-		writeMessages();
+		writeMessages(true);
 
 		// Record any additional messages (usually a full update if auto-recording))
 		// Do not write this message immediately because it needs to be written after
@@ -299,7 +299,7 @@ void ServerNetDemo::ticker()
 //   input and writes to the netdemo file.
 //
 
-void ServerNetDemo::writeMessages()
+void ServerNetDemo::writeMessages(bool isNetdemoStartup)
 {
 	if (!isRecording())
 		return;
@@ -310,15 +310,21 @@ void ServerNetDemo::writeMessages()
 		writeChunk(snapbuf.data(), snapbuf.size(), NetDemo::msg_snapshot);
 	}
 
-	auto output_buf = std::make_unique<byte[]>(captured.size() * MAX_UDP_PACKET);
+	auto output_buf = std::make_unique<byte[]>(
+    captured.size() * (isNetdemoStartup ? NETDEMO_STARTUP_PACKET_SIZE : MAX_UDP_PACKET)
+  );
 
 	uint32_t output_len = 0;
 	while (!captured.empty())
 	{
-		buf_t netbuf(captured.front());
+		buf_t netbuf(std::move(captured.front()));
 		uint32_t len = netbuf.BytesLeftToRead();
 
 		byte *chunk = netbuf.ReadChunk(len);
+
+    if (!chunk)
+     break;
+
 		memcpy(&output_buf[output_len], chunk, len);
 		output_len += len;
 
@@ -326,37 +332,6 @@ void ServerNetDemo::writeMessages()
 	}
 
 	writeChunk(output_buf.get(), output_len, NetDemo::msg_packet);
-}
-
-
-//
-// capture()
-//
-//   Copies data from inputbuffer just before the game parses it
-//
-
-void ServerNetDemo::capture(const buf_t* inputbuffer)
-{
-	if (!isRecording())
-	{
-		return;
-	}
-
-	if (inputbuffer->size() > 0)
-	{
-		captured.emplace_back(*inputbuffer);
-	}
-}
-
-void ServerNetDemo::capture(const std::basic_string<byte>& buffer)
-{
-	if (isRecording())
-	{
-		if (buffer.size() > 0)
-		{
-			captured.emplace_back(buffer);
-		}
-	}
 }
 
 

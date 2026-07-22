@@ -56,11 +56,31 @@ void D_SendServerInfoChange (const cvar_t *cvar, const char *value)
 
 FArchive &operator<< (FArchive &arc, UserInfo &info)
 {
+	arc << info.netname;
+	arc << info.team;
+	arc << info.aimdist;
+	arc << info.predict_weapons;
+	arc << info.colorpreset;
+	arc << info.color;
+	arc << info.gender;
+	arc << info.switchweapon;
+	arc << info.weapon_prefs;
+
 	return arc;
 }
 
-FArchive &operator>> (FArchive &arc, UserInfo &info) // removeme
+FArchive &operator>> (FArchive &arc, UserInfo &info)
 {
+	arc >> info.netname;
+	arc >> info.team;
+	arc >> info.aimdist;
+	arc >> info.predict_weapons;
+	arc >> info.colorpreset;
+	arc >> info.color;
+	arc >> info.gender;
+	arc >> info.switchweapon;
+	arc >> info.weapon_prefs;
+
 	return arc;
 }
 

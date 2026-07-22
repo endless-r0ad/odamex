@@ -129,13 +129,18 @@ size_t Packet::Send(int i_currentTic, SequenceSender& i_sender, const netadr_t& 
 		m_header.sequence = -i_sender.MostRecentAcquiredSequence();
 	}
 
-	if (netdemo && netdemo->isRecording() && m_outgoingPacketBuffer.size() > 0)
-	{
-		netdemo->captured.emplace_back(m_outgoingPacketBuffer.ptr());
-	}
-
 	m_outgoingPacketBuffer.SeekWrite(0, buf_t::BT_START);
 	m_header.Pack(m_outgoingPacketBuffer);
+
+  if (netdemo && 
+      netdemo->isRecording() && 
+      m_outgoingPacketBuffer.size() > PacketHeaderType::PACKET_HEADER_SIZE &&
+      not m_outgoingPacketBuffer.overflowed && 
+      not (m_header.flags & SVF_UNUSED_MASK))
+	{
+    m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
+    netdemo->capture(&m_outgoingPacketBuffer);
+	}
 
 	return CompressAndSend(i_dest);
 }

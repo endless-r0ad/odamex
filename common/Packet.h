@@ -24,6 +24,7 @@
 #include "i_net.h"
 
 #include "PacketHeaderType.h"
+#include "netdemo.h"
 
 class SequenceSender;
 
@@ -51,7 +52,7 @@ class Packet
 		// into the given i_sender for ack and retransmit handling.
 		//
 		// ReSend() is intended for sending retransmission buffers.
-		size_t Send(int i_currentTic, SequenceSender& i_sender, const netadr_t& i_dest);
+		size_t Send(int i_currentTic, SequenceSender& i_sender, const netadr_t& i_dest, NetDemo* netdemo = nullptr);
 		size_t ReSend(int sequence, const buf_t& i_dataBuffer, const netadr_t& i_dest);
 
 		size_t Size() const { return m_outgoingPacketBuffer.size(); }

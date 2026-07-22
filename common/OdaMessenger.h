@@ -25,6 +25,7 @@
 #include "Packet.h"
 #include "SequenceReceiver.h"
 #include "SequenceSender.h"
+#include "netdemo.h"
 
 enum class MessageResultEnum
 {
@@ -88,7 +89,7 @@ class OdaMessenger
 		///  ACCEPT - Normal result: Packet(s) were sent as needed without hitting a cap.
 		///  DEFER  - Packet(s) may have been sent, but a cap has been enountered.
 		///  ABORT  - Critical error sending: Time to drop the connection.
-		MessageResultEnum SendAll(int i_currentTic, const netadr_t& i_dest);
+		MessageResultEnum SendAll(int i_currentTic, const netadr_t& i_dest, NetDemo* netdemo = nullptr);
 
 		/// Retransmit the oldest reliable packets that were previously sent and are older than RetransmitDelay
 		/// (see Get/Set methods) but haven't yet been acknowledged.

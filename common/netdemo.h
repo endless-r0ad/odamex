@@ -9,7 +9,7 @@ struct NetDemo
 {
     enum netdemo_t
     {
-        client_side,
+        client_side = 0x01,
         server_side
     };
 
@@ -86,22 +86,28 @@ struct NetDemo
 	struct netdemo_header4_t
 	{
 		netdemo_header_id_t id      {};             // version 4
+		byte   	    demo_type       {};
 		byte        compression     { 0 };          // type of compression used
 		uint16_t    snapshot_spacing{ 0 };          // number of gametics between indices
 		uint32_t    starting_gametic{ 0 };          // the gametic the demo starts at
 		uint32_t    ending_gametic  { 0 };          // the last gametic of the demo
-		byte        reserved[48]    { 0 };          // for future use
+		byte        reserved[47]    { 0 };          // for future use
 
 		bool Read(std::fstream& io_stream);
 		void Import(const netdemo_header3_t& oldHeader)
 		{
 			// we deliberately skip 'id' and 'reserved'.
+			demo_type		 = NetDemo::client_side;
 			compression      = oldHeader.compression;
 			snapshot_spacing = oldHeader.snapshot_spacing;
 			starting_gametic = oldHeader.starting_gametic;
 			ending_gametic   = oldHeader.ending_gametic;
 		}
 	};
+
+	bool writeHeader();
+	bool readHeader();
+	static int LatestDemoVersion(const int version);
 
 	netdemo_state_t state   { st_stopped };
 	netdemo_state_t oldstate{ st_stopped };   // used when unpausing
@@ -110,8 +116,8 @@ struct NetDemo
 
 	std::deque<buf_t>   captured {};
 
-	netdemo_header4_t                  header        {};
+	netdemo_header4_t   header {};
 
-	std::vector<byte>   snapbuf         { };
-	int                 netdemotic      { 0 };
+	std::vector<byte>   snapbuf {};
+	int                 netdemotic{ 0 };
 };

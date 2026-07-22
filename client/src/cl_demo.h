@@ -60,8 +60,6 @@ private:
 
 	void readSnapshot(const netdemo_index_entry_t *snap);
 	void writeChunk(const byte *data, size_t size, netdemo_message_t type);
-	bool writeHeader();
-	bool readHeader();
 
 	bool atSnapshotInterval();
 

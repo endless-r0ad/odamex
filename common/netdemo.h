@@ -108,6 +108,8 @@ struct NetDemo
 	bool writeHeader();
 	bool readHeader();
 	static int LatestDemoVersion(const int version);
+  void capture(const buf_t* netbuffer);
+	void capture(const std::basic_string<byte>& buffer);
 
 	netdemo_state_t state   { st_stopped };
 	netdemo_state_t oldstate{ st_stopped };   // used when unpausing

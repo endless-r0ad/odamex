@@ -27,8 +27,6 @@ public:
 
 	void writeMessages();
 	void readMessages(buf_t* netbuffer);
-	void capture(const buf_t* netbuffer);
-	void capture(const std::basic_string<byte>& buffer);
 	void writeMapChange();
 	void writeIntermission();
 

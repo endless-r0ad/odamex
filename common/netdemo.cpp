@@ -152,3 +152,34 @@ bool NetDemo::readHeader()
     }
 	return false;
 }
+
+
+//
+// capture()
+//
+//   Copies data from inputbuffer just before the game parses it
+//
+
+void NetDemo::capture(const buf_t* inputbuffer)
+{
+	if (!isRecording())
+	{
+		return;
+	}
+
+	if (inputbuffer->size() > 0)
+	{
+		captured.emplace_back(*inputbuffer);
+	}
+}
+
+void NetDemo::capture(const std::basic_string<byte>& buffer)
+{
+	if (isRecording())
+	{
+		if (buffer.size() > 0)
+		{
+			captured.emplace_back(buffer);
+		}
+	}
+}

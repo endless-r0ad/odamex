@@ -685,37 +685,6 @@ void ClientNetDemo::readMessages(buf_t* netbuffer)
 
 
 //
-// capture()
-//
-//   Copies data from inputbuffer just before the game parses it
-//
-
-void ClientNetDemo::capture(const buf_t* inputbuffer)
-{
-	if (!isRecording())
-	{
-		return;
-	}
-
-	if (inputbuffer->size() > 0)
-	{
-		captured.emplace_back(*inputbuffer);
-	}
-}
-
-void ClientNetDemo::capture(const std::basic_string<byte>& buffer)
-{
-	if (isRecording())
-	{
-		if (buffer.size() > 0)
-		{
-			captured.emplace_back(buffer);
-		}
-	}
-}
-
-
-//
 // writeLauncherSequence()
 //
 //   Emulates the sequence of messages the server sends a launcher program or

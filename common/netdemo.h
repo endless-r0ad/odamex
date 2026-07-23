@@ -16,6 +16,9 @@ struct NetDemo
 	[[nodiscard]] bool isRecording() const { return (state == NetDemo::st_recording); }
 	[[nodiscard]] bool isPlaying() const { return (state == NetDemo::st_playing); }
 	[[nodiscard]] bool isPaused() const { return (state == NetDemo::st_paused); }
+
+  [[nodiscard]] bool isClientSide() const { return (header.demo_type == NetDemo::client_side); }
+  [[nodiscard]] bool isServerSide() const { return (header.demo_type == NetDemo::server_side); }
 	[[nodiscard]] int getSpacing() const { return header.snapshot_spacing; }
 
 	enum netdemo_state_t

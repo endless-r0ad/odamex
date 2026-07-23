@@ -280,7 +280,7 @@ static void CL_PredictLocalPlayer(int predtic)
 //
 void CL_PredictWorld(void)
 {
-	if (gamestate != GS_LEVEL)
+	if (gamestate != GS_LEVEL || (netdemo.isPlaying() && netdemo.isServerSide()))
 		return;
 
 	player_t& p = consoleplayer();

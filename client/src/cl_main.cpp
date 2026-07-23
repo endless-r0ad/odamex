@@ -421,7 +421,7 @@ void CL_QuitNetGame(const netQuitReason_e reason)
 	if (netdemo.isRecording())
 		netdemo.stopRecording();
 
-	if (netdemo.isPlaying() || netdemo.isPaused())
+	if (netdemo.isInPlayback())
 		netdemo.stopPlaying();
 
 	demoplayback = false;
@@ -633,7 +633,7 @@ void CL_CheckDisplayPlayer(void)
 	if (!validplayer(displayplayer()) || !displayplayer().mo)
 		newid = consoleplayer_id;
 
-	if (!P_CanSpy(consoleplayer(), displayplayer(), demoplayback || netdemo.isPlaying() || netdemo.isPaused()))
+	if (!P_CanSpy(consoleplayer(), displayplayer(), demoplayback || netdemo.isInPlayback()))
 		newid = consoleplayer_id;
 
 	if (displayplayer().spectator)
@@ -707,7 +707,7 @@ void CL_SpyCycle(Iterator begin, Iterator end)
 		player_t& player = *it;
 
 		// spectators only cycle between active players
-		if (P_CanSpy(self, player, demoplayback || netdemo.isPlaying() || netdemo.isPaused()))
+		if (P_CanSpy(self, player, demoplayback || netdemo.isInPlayback()))
 		{
 			displayplayer_id = player.id;
 			CL_CheckDisplayPlayer();
@@ -1360,7 +1360,7 @@ END_COMMAND(netplay)
 
 BEGIN_COMMAND(netdemostats)
 {
-	if (!netdemo.isPlaying() && !netdemo.isPaused())
+	if (not netdemo.isInPlayback())
 		return;
 
 	std::vector<int> maptimes = netdemo.getMapChangeTimes();
@@ -1394,7 +1394,7 @@ BEGIN_COMMAND(netrew)
 {
 	if (netdemo.isPlaying())
 		netdemo.prevSnapshot();
-	else if (netdemo.isPaused());
+	else if (netdemo.isPaused())
 		netdemo.prevTic();
 }
 END_COMMAND(netrew)
@@ -1998,11 +1998,6 @@ void CL_TryToConnect(uint32_t server_token)
 
 		CL_SendUserInfo(netBuf); // send userinfo
 
-		// [SL] The "rate" CVAR has been deprecated. Now just send a hard-coded
-		// maximum rate that the server will ignore.
-		constexpr int rate = 0xFFFF;
-		MSG_WriteLong(&netBuf, rate);
-
 		MSG_WriteString(&netBuf, connectpasshash.c_str());
 
 		NET_SendPacket(netBuf, serveraddr);
@@ -2077,7 +2072,7 @@ MessageResultEnum CL_AcceptNetMessage()
 	return MessageResultEnum::DEFER;
 }
 
-MessageResultEnum CL_ProcessCurrentReliableMessages()
+MessageResultEnum CL_ProcessCurrentAvailableMessages()
 {
 	auto result = CL_AcceptNetMessage();
 	while (result == MessageResultEnum::ACCEPT)

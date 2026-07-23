@@ -156,6 +156,8 @@ class OdaMessenger
 		int GetReliableOverloadCount() const { return m_reliableOverloadCount; }
 		int GetTicBudget() const             { return m_perTicBudget; }
 
+		int GetCurrentReceivedPacketSequenceNumber() const { return m_currentReceivedPacketSequenceNumber; }
+
 	protected:
 
 		size_t PackAsReliable  (Packet& io_packet, const buf_t& messageBuf);
@@ -180,7 +182,9 @@ class OdaMessenger
 		MessageQueue m_outgoingNonReliableQueue;
 		MessageQueue m_outgoingHighNonReliableQueue;
 
-		buf_t* m_quickTurnaroundReceiveBuffer { nullptr };
+		buf_t m_immediateReceiveBuffer              { MAX_UDP_PACKET };
+		int   m_immediateReceiveSequenceNumber      { 0 };
+		int   m_currentReceivedPacketSequenceNumber { 0 };
 
 		int m_maxPacketsPerRetransmission   { DEFAULT_RETRANSMISSIONS_PER_TIC };
 		int m_retransmitDelayInTics         { 0 };

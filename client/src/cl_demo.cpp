@@ -181,7 +181,7 @@ bool ClientNetDemo::startRecording(const std::string &filename)
 {
 	this->filename = filename;
 
-	if (isPlaying() || isPaused())
+	if (isInPlayback())
 	{
 		error("Cannot record a netdemo while not connected to a server.");
 		return false;
@@ -1069,7 +1069,7 @@ void ClientNetDemo::readSnapshot(const netdemo_index_entry_t *snap)
 //
 int ClientNetDemo::calculateTotalTime() const
 {
-	if (!isPlaying() && !isPaused())
+	if (not isInPlayback())
 		return 0;
 
 	return ((header.ending_gametic - header.starting_gametic) / TICRATE);
@@ -1083,7 +1083,7 @@ int ClientNetDemo::calculateTotalTime() const
 //
 int ClientNetDemo::calculateTimeElapsed() const
 {
-	if (!isPlaying() && !isPaused())
+	if (not isInPlayback())
 		return 0;
 
 	int elapsed = netdemotic / TICRATE;

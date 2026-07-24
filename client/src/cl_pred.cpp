@@ -288,6 +288,18 @@ void CL_PredictWorld(void)
 	if (!validplayer(p) || !p.mo || noservermsgs || netdemo.isPaused())
 		return;
 
+	if (netdemo.isPlaying() && netdemo.isServerSide())
+	{
+		for (auto& player : players)
+		{
+			if (player.ingame() && player.mo)
+			{
+				P_PlayerThink(player);
+			}
+		}
+		return;
+	}
+  
 	// tenatively tell the netgraph that our prediction was successful
 	netgraph.setMisprediction(false);
 

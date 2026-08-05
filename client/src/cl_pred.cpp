@@ -280,25 +280,13 @@ static void CL_PredictLocalPlayer(int predtic)
 //
 void CL_PredictWorld(void)
 {
-	if (gamestate != GS_LEVEL || (netdemo.isPlaying() && netdemo.isServerSide()))
+	if (gamestate != GS_LEVEL || (netdemo.isInPlayback() && netdemo.isServerSide()))
 		return;
 
 	player_t& p = consoleplayer();
 
 	if (!validplayer(p) || !p.mo || noservermsgs || netdemo.isPaused())
 		return;
-
-	if (netdemo.isPlaying() && netdemo.isServerSide())
-	{
-		for (auto& player : players)
-		{
-			if (player.ingame() && player.mo)
-			{
-				P_PlayerThink(player);
-			}
-		}
-		return;
-	}
   
 	// tenatively tell the netgraph that our prediction was successful
 	netgraph.setMisprediction(false);

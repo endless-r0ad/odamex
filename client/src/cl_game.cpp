@@ -1200,6 +1200,18 @@ void G_Ticker (void)
 				CL_SimulateWorld();
 				CL_PredictWorld();
 
+        if (netdemo.isPlaying() && netdemo.isServerSide())
+        {
+          for (auto& player : players)
+          {
+            if (player.ingame() && player.mo)
+            {
+              P_PlayerThink(player);
+              player.mo->RunThink();
+            }
+          }
+        }
+
 				// Replay item pickups if the items arrived now.
 				ClientReplay::getInstance().itemReplay();
 			}

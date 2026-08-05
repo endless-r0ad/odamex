@@ -534,7 +534,7 @@ void G_AirControlChanged()
 // playerstate.  Third parameter is true if you want to handle playerstate
 // yourself (map resets), just make sure you set it the same for both
 // serialization and unserialization.
-void G_SerializeLevel(FArchive &arc, bool hubLoad)
+void G_SerializeLevel(FArchive &arc, bool hubLoad, bool serversideNetdemo = false)
 {
 	if (arc.IsStoring ())
 	{
@@ -584,13 +584,14 @@ void G_SerializeLevel(FArchive &arc, bool hubLoad)
 		P_SerializePlayers(arc);
 
 	P_SerializeThinkers(arc, hubLoad);
-	P_SerializeWorld(arc);
+  if (not serversideNetdemo)
+	  P_SerializeWorld(arc);
 	P_SerializePolyobjs(arc);
 	P_SerializeSounds(arc);
 }
 
 // Archives the current level
-void G_SnapshotLevel()
+void G_SnapshotLevel(bool serversideNetdemo)
 {
 	delete level.info->snapshot;
 
@@ -599,12 +600,12 @@ void G_SnapshotLevel()
 
 	FArchive arc(*level.info->snapshot);
 
-	G_SerializeLevel(arc, false);
+	G_SerializeLevel(arc, false, serversideNetdemo);
 }
 
 // Unarchives the current level based on its snapshot
 // The level should have already been loaded and setup.
-void G_UnSnapshotLevel(bool hubLoad)
+void G_UnSnapshotLevel(bool hubLoad, bool serversideNetdemo)
 {
 	if (level.info->snapshot == NULL)
 		return;
@@ -613,7 +614,7 @@ void G_UnSnapshotLevel(bool hubLoad)
 	FArchive arc (*level.info->snapshot);
 	if (hubLoad)
 		arc.SetHubTravel (); // denis - hexen?
-	G_SerializeLevel(arc, hubLoad);
+	G_SerializeLevel(arc, hubLoad, serversideNetdemo);
 	arc.Close ();
 	// No reason to keep the snapshot around once the level's been entered.
 	delete level.info->snapshot;

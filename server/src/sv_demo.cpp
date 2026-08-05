@@ -479,10 +479,10 @@ void ServerNetDemo::writeConnectionSequence(buf_t *netbuffer)
 	const player_t& first_player = players.front();
 
 	// Server sends our player id and digest
-	MSG_WriteSVCBuffer(netbuffer, SVC_ConsolePlayer(first_player, "2"));
+	MSG_WriteSVCBuffer(netbuffer, SVC_ConsolePlayer(first_player, first_player.client.digest));
 
 	// our userinfo
-	MSG_WriteSVCBuffer(netbuffer, SVC_UserInfo(first_player, 4));
+	MSG_WriteSVCBuffer(netbuffer, SVC_UserInfo(first_player, 1));
 
 	// Server sends its settings
 	cvar_t *var = GetFirstCvar();
@@ -499,7 +499,7 @@ void ServerNetDemo::writeConnectionSequence(buf_t *netbuffer)
 	MSG_WriteSVCBuffer(netbuffer, SVC_PlayerMembers(first_player, SVC_PM_SPECTATOR));
 
 	// Server sends wads & map name
-	MSG_WriteSVCBuffer(netbuffer, SVC_LoadMap(wadfiles, patchfiles, level.mapname.c_str(), level.time));
+	MSG_WriteSVCBuffer(netbuffer, SVC_LoadMap(::wadfiles, ::patchfiles, ::level.mapname.c_str(), 0));
 
 	// Server spawns the player
 	MSG_WriteSVCBuffer(netbuffer, SVC_SpawnPlayer(first_player, gametic));
@@ -542,7 +542,7 @@ int ServerNetDemo::calculateTimeElapsed() const
 
 void ServerNetDemo::writeMapChange()
 {
-	if (isRecording() && gamestate == GS_LEVEL)
+	if (isRecording())
 	{
 		writeSnapshotData(snapbuf);
 		writeChunk(snapbuf.data(), snapbuf.size(), NetDemo::msg_map_change);
@@ -568,7 +568,7 @@ void ServerNetDemo::writeIntermission()
 //
 void ServerNetDemo::writeSnapshotData(std::vector<byte>& buf)
 {
-	G_SnapshotLevel();
+	G_SnapshotLevel(true);
 
 	FLZOMemFile memfile;
 	memfile.Open();         // open for writing

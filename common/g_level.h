@@ -456,8 +456,8 @@ void G_AirControlChanged();
 OLumpName CalcMapName(int episode, int level);
 
 void G_ClearSnapshots();
-void G_SnapshotLevel();
-void G_UnSnapshotLevel(bool keepPlayers);
+void G_SnapshotLevel(bool serversideNetdemo = false);
+void G_UnSnapshotLevel(bool keepPlayers, bool serversideNetdemo = false);
 void G_SerializeSnapshots(FArchive &arc);
 
 void cmd_maplist(const std::vector<std::string> &arguments, std::vector<std::string> &response);

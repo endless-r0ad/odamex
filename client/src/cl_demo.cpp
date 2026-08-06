@@ -39,8 +39,10 @@
 #include "clc_message.h"
 #include "svc_message.h"
 #include "g_gametype.h"
+#include "g_game.h"
 
 #include "PacketHeaderType.h"
+#include "cl_freecam.h"
 
 EXTERN_CVAR(sv_maxclients)
 EXTERN_CVAR(sv_maxplayers)
@@ -79,7 +81,7 @@ void ClientNetDemo::cleanUp()
 {
 	if (isRecording())
 	{
-		stopRecording();	// Try to write any unwritten data
+		stopRecording();    // Try to write any unwritten data
 	}
 
 	// close all files
@@ -89,6 +91,7 @@ void ClientNetDemo::cleanUp()
 	map_index.clear();
 	state = oldstate = NetDemo::st_stopped;
 	netdemotic = pause_netdemotic = last_map_tic = 0;
+	timingdemo = false;
 }
 
 /**
@@ -123,7 +126,7 @@ void ClientNetDemo::fatalError(const std::string &message)
 //
 // pouplateMessageIndexes()
 //
-//   called from startPlaying, seeks through the demo and populates 
+//   called from startPlaying, seeks through the demo and populates
 //   map_index and snapshot_index vecs
 void ClientNetDemo::populateMessageIndexes()
 {
@@ -295,11 +298,11 @@ bool ClientNetDemo::startPlaying(const std::string &filename)
 		return false;
 	}
 
-    if constexpr (TRY_LOADING_OLD_NETDEMOS)
-    {
-        PrintFmt(PRINT_WARNING, "Attempting to load a version {} netdemo...\n", header.id.version);
-    }
-    else if (header.id.version != NETDEMOVER)
+	if constexpr (TRY_LOADING_OLD_NETDEMOS)
+	{
+		PrintFmt(PRINT_WARNING, "Attempting to load a version {} netdemo...\n", header.id.version);
+	}
+	else if (header.id.version != NETDEMOVER)
 	{
 		std::string buffer;
 		const int latestVersion = LatestDemoVersion(header.id.version);
@@ -345,6 +348,7 @@ bool ClientNetDemo::pause()
 {
 	if (isPlaying())
 	{
+		timingdemo = false;
 		oldstate = state;
 		state = NetDemo::st_paused;
 		return true;
@@ -432,6 +436,8 @@ bool ClientNetDemo::stopPlaying()
 	gameaction = ga_fullconsole;
 	gamestate = GS_FULLCONSOLE;
 
+	Freecam::reset();
+
 	return true;
 }
 
@@ -495,15 +501,22 @@ bool ClientNetDemo::atSnapshotInterval()
 }
 
 
-void ClientNetDemo::ticker()
+bool ClientNetDemo::ticker()
 {
-	netdemotic++;
-	if (netdemotic == pause_netdemotic)
+	if (not isInPlayback())
+		return false;
+
+	if (isPlaying())
 	{
-		pause_netdemotic = 0;
-		pause();
-		::paused = true;
+		netdemotic++;
+		if (netdemotic == pause_netdemotic)
+		{
+			pause_netdemotic = 0;
+			pause();
+			::paused = true;
+		}
 	}
+	return true;
 }
 
 //
@@ -679,7 +692,8 @@ void ClientNetDemo::readMessages(buf_t* netbuffer)
 	}
 
 	// read from the input file and put the data into netbuffer
-	gametic = tic;
+	gametic     = tic;
+	netdemotic  = gametic - header.starting_gametic;
 	readMessageBody(netbuffer, len);
 }
 
@@ -856,59 +870,82 @@ void ClientNetDemo::writeConnectionSequence(buf_t *netbuffer)
 }
 
 
-//
-// snapshotLookup()
-//
-//      Returns the snapshot that preceeds the ticnum parameter or returns
-//      NULL if the ticnum is out of bounds.
-//
-const ClientNetDemo::netdemo_index_entry_t *ClientNetDemo::snapshotLookup(int ticnum) const
+ClientNetDemo::SnapshotVector::const_iterator ClientNetDemo::lookupSnapshot(const SnapshotVector& i_vector, uint32_t gameticnum) const
 {
-	int index = (ticnum - header.starting_gametic) / header.snapshot_spacing - 1;
+	if (gameticnum < header.starting_gametic or
+	    gameticnum > header.ending_gametic or
+	    i_vector.empty())
+	{
+		return i_vector.end();
+	}
 
-	if (index >= snapshot_index.size())
-		return NULL;
+	auto iter = std::upper_bound(i_vector.begin(),
+	                             i_vector.end(),
+	                             gameticnum);
 
-	int mapindex = getCurrentMapIndex();
-	if (index < 0 || snapshot_index[index].ticnum < map_index[mapindex].ticnum)
-		return &map_index[mapindex];
+	// We know that the tic number is within the valid range and that there's at least one snapshot,
+	// but upper_bound will return end() if the tic number is between the start of the last snapshot
+	// and the ending_gametic.
+	//
+	// In any case, we want to return the element BEFORE the result of upper_bound, unless it's the
+	// very first element.
 
-	return &snapshot_index[index];
+	if (iter == i_vector.begin())
+	{
+		return iter;
+	}
+	return iter-1;
 }
 
+
+// getSnapshotForNetdemotic()
 //
-// getCurrentSnapshotIndex()
+//      Returns the snapshot that preceeds the netdemoticnum parameter or returns
+//      snapshot_index.end() if the netdemoticnum is out of bounds.
 //
-//      Returns the index into the snapshot_index vector that immediately
+ClientNetDemo::SnapshotVector::const_iterator ClientNetDemo::getSnapshotForNetdemotic(uint32_t i_netdemoticnum) const
+{
+	return lookupSnapshot(snapshot_index, header.starting_gametic + i_netdemoticnum);
+}
+
+// getSnapshotForGametic()
+//
+//      Returns the snapshot that preceeds the gameticnum parameter or returns
+//      snapshot_index.end() if the gameticnum is out of bounds.
+//
+ClientNetDemo::SnapshotVector::const_iterator ClientNetDemo::getSnapshotForGametic(uint32_t gameticnum) const
+{
+	return lookupSnapshot(snapshot_index, gameticnum);
+}
+
+// getMapLoadSnapshotForGametic()
+//
+//      Returns the snapshot that loaded the map that is being played as of the given gametic.
+//      Returns map_index.end() if the gametic is out of bounds.
+ClientNetDemo::SnapshotVector::const_iterator ClientNetDemo::getMapLoadSnapshotForGametic(uint32_t gameticnum) const
+{
+	return lookupSnapshot(map_index, gameticnum);
+}
+
+// getCurrentSnapshotIter()
+//
+//      Returns the iterator into the snapshot_index vector that immediately
 //      preceeds the current gametic.
 //
-int ClientNetDemo::getCurrentSnapshotIndex() const
+ClientNetDemo::SnapshotVector::const_iterator ClientNetDemo::getCurrentSnapshotIter() const
 {
-	for (int i = 0; i < snapshot_index.size() - 1; i++)
-	{
-		if (static_cast<int>(snapshot_index[i + 1].ticnum) > gametic)
-			return i;
-	}
-
-	return snapshot_index.size() - 1;
+	return lookupSnapshot(snapshot_index, static_cast<uint32_t>(gametic));
 }
 
-
 //
-// getCurrentMapIndex()
+// getCurrentMapIter()
 //
-//      Returns the index into the map_index vector for the map that the
+//      Returns the iterator into the map_index vector for the map that the
 //      is currently being played.
 //
-int ClientNetDemo::getCurrentMapIndex() const
+ClientNetDemo::SnapshotVector::const_iterator ClientNetDemo::getCurrentMapIter() const
 {
-	for (int i = 0; i < map_index.size() - 1; i++)
-	{
-		if (static_cast<int>(map_index[i + 1].ticnum) > gametic)
-			return i;
-	}
-
-	return map_index.size() - 1;
+	return lookupSnapshot(map_index, static_cast<uint32_t>(gametic));
 }
 
 //
@@ -938,9 +975,7 @@ void ClientNetDemo::prevTic()
 	if (!isPaused())
 		return;
 
-	pause_netdemotic = netdemotic - 1;
-	state = oldstate;
-	::paused = false;
+	seekNetdemotic(netdemotic - 1);
 }
 
 //
@@ -951,16 +986,15 @@ void ClientNetDemo::prevTic()
 //
 void ClientNetDemo::nextSnapshot()
 {
-	if (snapshot_index.empty())
+	auto currentIter = getCurrentSnapshotIter();
+
+	if (currentIter   == snapshot_index.end() or
+	    currentIter+1 == snapshot_index.end())
+	{
 		return;
+	}
 
-	int nextsnapindex = getCurrentSnapshotIndex() + 1;
-
-	// don't read past the last snapshot
-	if (nextsnapindex >= snapshot_index.size())
-		return;
-
-	readSnapshot(&snapshot_index[nextsnapindex]);
+	readSnapshot(currentIter+1);
 }
 
 
@@ -972,15 +1006,17 @@ void ClientNetDemo::nextSnapshot()
 //
 void ClientNetDemo::prevSnapshot()
 {
-	if (snapshot_index.empty())
+	auto iter = getCurrentSnapshotIter();
+
+	if (iter == snapshot_index.end())        // Unlikely, but validate it anyway.
 		return;
 
-	int prevsnapindex = getCurrentSnapshotIndex() - 1;
+	if (iter != snapshot_index.begin())
+	{
+		iter -= 1;
+	}
 
-	if (prevsnapindex < 0)
-		prevsnapindex = 0;
-
-	readSnapshot(&snapshot_index[prevsnapindex]);
+	readSnapshot(iter);
 }
 
 //
@@ -991,16 +1027,16 @@ void ClientNetDemo::prevSnapshot()
 //
 void ClientNetDemo::nextMap()
 {
-	if (map_index.empty())
+	auto iter = getCurrentMapIter();
+	if (iter == map_index.end())
 		return;
 
-	int nextmapindex = getCurrentMapIndex() + 1;
-	if (nextmapindex >= map_index.size())
+	iter += 1;
+
+	if (iter == map_index.end())
 		return;
 
-	const NetDemo::netdemo_index_entry_t *snap = &map_index[nextmapindex];
-
-	readSnapshot(snap);
+	readSnapshot(iter);
 }
 
 //
@@ -1011,16 +1047,17 @@ void ClientNetDemo::nextMap()
 //
 void ClientNetDemo::prevMap()
 {
-	if (map_index.empty())
+	auto iter = getCurrentMapIter();
+
+	if (iter == map_index.end())
 		return;
 
-	int prevmapindex = getCurrentMapIndex() - 1;
-	if (prevmapindex < 0)
-		prevmapindex = 0;
+	if (iter != map_index.begin())
+	{
+		iter -= 1;
+	}
 
-	const NetDemo::netdemo_index_entry_t *snap = &map_index[prevmapindex];
-
-	readSnapshot(snap);
+	readSnapshot(iter);
 }
 
 
@@ -1028,10 +1065,10 @@ void ClientNetDemo::prevMap()
 // readSnapshot()
 //
 //
-void ClientNetDemo::readSnapshot(const netdemo_index_entry_t *snap)
+bool ClientNetDemo::readSnapshot(SnapshotVector::const_iterator snap)
 {
-	if (!isPlaying() || !snap)
-		return;
+	if (not isPlaying())
+		return false;
 
 	gametic = snap->ticnum;
 	int file_offset = snap->offset;
@@ -1043,7 +1080,7 @@ void ClientNetDemo::readSnapshot(const netdemo_index_entry_t *snap)
 	if (!readMessageHeader(type, len, tic))
 	{
 		fatalError("Failed to read netdemo message header.");
-		return;
+		return false;
 	}
 
 	// Clear the snapshot buffer and read into it.
@@ -1054,11 +1091,12 @@ void ClientNetDemo::readSnapshot(const netdemo_index_entry_t *snap)
 	if (demofp.gcount() < len)
 	{
 		fatalError("Unable to read snapshot from data file");
-		return;
+		return false;
 	}
 
 	readSnapshotData(snapbuf);
 	netdemotic = snap->ticnum - header.starting_gametic;
+	return true;
 }
 
 
@@ -1108,6 +1146,69 @@ const std::vector<int> ClientNetDemo::getMapChangeTimes() const
 	return times;
 }
 
+bool ClientNetDemo::seekGametic(int requestedGametic)
+{
+	if (not isInPlayback()
+	    or requestedGametic < header.starting_gametic
+	    or requestedGametic > header.ending_gametic)
+	{
+		return false;
+	}
+
+	if (requestedGametic == gametic)
+		return true;
+
+	auto snapshotIter = getSnapshotForGametic(requestedGametic);
+	if (snapshotIter == snapshot_index.end())
+		return false;
+
+	// First, we have to be playing to load a snapshot.  Then we have to be playing to
+	// fast-forward to the requested tic.  If we fail, we just simply pause.
+	resume();
+
+	// If we're switching maps, then load the snapshot that walks the client through the
+	// proper map-change message sequence before we try to load the commanded snapshot.
+	// This avoids some glitches, including missing mobjs and mis-interpolations.
+	const auto currentMapLoadIter = getCurrentMapIter();
+	const auto destinationMapIter = getMapLoadSnapshotForGametic(requestedGametic);
+	if (currentMapLoadIter != destinationMapIter)
+	{
+		readSnapshot(destinationMapIter);
+	}
+
+	auto currentSnapshotIter = getCurrentSnapshotIter();
+
+	// We want to force a snapshot load if we need to skip backwards by any amount or if
+	// we're advancing to another snapshot, and the target is more than a second out.
+	// The only reason for the one second out is that we can just easily fast-forward
+	// 35 tics.  It's pretty arbitary really.
+	const bool mustLoadSnapshot = requestedGametic < gametic
+	                              or (snapshotIter != currentSnapshotIter
+	                                  and requestedGametic > gametic + TICRATE);
+
+	const bool isReadyToFF = mustLoadSnapshot ? readSnapshot(snapshotIter) : true;
+
+	if (isReadyToFF)
+	{
+		// FIXME:   If we try to pause at the very beginning of a snapshot, we get a horrible
+		//          view interpolation error.  Workaround: advance one tic.
+		if (requestedGametic == snapshotIter->ticnum)
+		{
+			requestedGametic += 1;
+		}
+		timingdemo = true;
+		pause_netdemotic = requestedGametic - header.starting_gametic;
+
+		return true;
+	}
+	pause();
+	return false;
+}
+
+bool ClientNetDemo::seekNetdemotic(int requestedNetdemotic)
+{
+	return seekGametic(requestedNetdemotic + header.starting_gametic);
+}
 
 void ClientNetDemo::writeMapChange()
 {
@@ -1232,6 +1333,8 @@ void ClientNetDemo::readSnapshotData(std::vector<byte>& buf)
 {
 	byte cid = consoleplayer_id;
 	byte did = displayplayer_id;
+
+	Freecam::savePosition();
 
 	P_ClearAllNetIds();
 
@@ -1365,7 +1468,7 @@ void ClientNetDemo::readSnapshotData(std::vector<byte>& buf)
 
 	// try to restore display player
 	player_t *disp = &idplayer(did);
-	if (validplayer(*disp) && disp->ingame() && !disp->spectator)
+	if ((validplayer(*disp) && disp->ingame() && !disp->spectator) || disp->isFreecam)
 		displayplayer_id = did;
 	else
 		displayplayer_id = cid;

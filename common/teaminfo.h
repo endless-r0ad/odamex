@@ -183,3 +183,4 @@ TeamInfo* GetTeamInfo(team_t team);
 std::string V_GetTeamColor(TeamInfo* team);
 std::string V_GetTeamColor(team_t ateam);
 void SerializeTeamFlagData(FArchive& arc);
+bool P_IsTeamStart(int16_t type);

@@ -160,6 +160,12 @@ std::string M_GetWriteDir();
 std::string M_GetDownloadDir();
 
 /**
+ * @brief Get the directory that netdemos shall be written into.
+ *        If the directory does not exist, it will be created.
+ */
+std::string M_GetNetDemoDir();
+
+/**
  * @brief Resolve a file name into a user directory.
  *
  * @detail This function is OS-specific.

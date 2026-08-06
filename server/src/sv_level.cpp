@@ -38,6 +38,7 @@
 BEGIN_DISABLE_WARNING_GNU("-Wold-style-cast")
 #include "minilzo.h"
 END_DISABLE_WARNING_GNU
+#include "m_fileio.h"
 #include "m_random.h"
 #include "p_acs.h"
 #include "p_ctf.h"
@@ -281,7 +282,7 @@ void G_ChangeMap()
 	}
 	if (was_recording && not players.empty())
 	{
-		netdemo.startRecording("odasrv_next.odd");
+		netdemo.startRecording(M_GetNetDemoDir() + "/odasrv_next.odd");
 		netdemo.writeMapChange();
 	}
 }
@@ -315,7 +316,7 @@ void G_ChangeMap(size_t index) {
 
 	if (was_recording && not players.empty())
 	{
-		netdemo.startRecording("odasrv_next.odd");
+		netdemo.startRecording(M_GetNetDemoDir() + "/odasrv_next.odd");
 		netdemo.writeMapChange();
 	}
 }
@@ -363,7 +364,7 @@ void G_ChangeMapStartup()
 
 	if (was_recording && not players.empty())
 	{
-		netdemo.startRecording("odasrv_next.odd");
+		netdemo.startRecording(M_GetNetDemoDir() + "/odasrv_next.odd");
 		netdemo.writeMapChange();
 	}
 	
@@ -686,7 +687,7 @@ void G_DoCompleted()
 	SpreeManager::getInstance().clearSprees();
 }
 
-extern void G_SerializeLevel(FArchive &arc, bool hubLoad);
+extern void G_SerializeLevel(FArchive &arc, bool hubLoad, bool serversideNetdemo = false);
 
 // [AM] - Save the state of the level that can be reset to
 void G_DoSaveResetState()

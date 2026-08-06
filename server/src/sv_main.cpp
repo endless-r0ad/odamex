@@ -53,6 +53,7 @@
 #include "c_dispatch.h"
 #include "m_argv.h"
 #include "m_random.h"
+#include "m_fileio.h"
 #include "p_ctf.h"
 #include "w_wad.h"
 #include "w_ident.h"
@@ -472,12 +473,6 @@ END_COMMAND(stopnetdemo)
 
 BEGIN_COMMAND(netrecord)
 {
-	if (players.empty())
-	{
-		PrintFmt(PRINT_HIGH, "Cannot record a server-side demo with 0 players in server");
-		return;
-	}
-
 	if (netdemo.isRecording())
 	{
 		PrintFmt(PRINT_HIGH, "Already recording a netdemo.  Please stop recording before "\
@@ -485,11 +480,12 @@ BEGIN_COMMAND(netrecord)
 		return;
 	}
 
-	std::string filename = "odasrv_netdemo.odd";
+	std::string filename;
+
 	if (argc > 1 && strlen(argv[1]) > 0)
 		filename = argv[1];
-	//else
-	//	filename = CL_GenerateNetDemoFileName();
+	else
+		filename = M_GetNetDemoDir() + "/odasrv.odd";
 
 	if (netdemo.startRecording(filename))
 	{

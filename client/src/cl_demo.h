@@ -1,8 +1,5 @@
 #pragma once
 
-#include <deque>
-#include <fstream>
-
 #include "netdemo.h"
 #include "i_net.h"
 

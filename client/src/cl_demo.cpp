@@ -37,7 +37,6 @@
 #include "st_stuff.h"
 #include "p_mobj.h"
 #include "clc_message.h"
-#include "msg_message.h"
 #include "svc_message.h"
 #include "g_gametype.h"
 #include "g_game.h"
@@ -699,15 +698,6 @@ void ClientNetDemo::readMessages(buf_t* netbuffer)
 	readMessageBody(netbuffer, len);
 }
 
-void NetDemo::capturePacketHeader(const PacketHeaderType& header)
-{
-	if (isRecording())
-	{
-		workingBuffer.clear();
-		MSG_WriteSVCBuffer(& workingBuffer, MSG_Header(header));
-		captured.emplace_back(workingBuffer);
-	}
-}
 
 //
 // writeLauncherSequence()

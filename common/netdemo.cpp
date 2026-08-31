@@ -1,6 +1,8 @@
 
 #include "netdemo.h"
 #include "m_fileio.h"
+#include "msg_message.h"
+
 
 
 /**
@@ -181,5 +183,15 @@ void NetDemo::capture(const std::basic_string<byte>& buffer)
 		{
 			captured.emplace_back(buffer);
 		}
+	}
+}
+
+void NetDemo::capturePacketHeader(const PacketHeaderType& header)
+{
+	if (isRecording())
+	{
+		workingBuffer.clear();
+		MSG_WriteSVCBuffer(& workingBuffer, MSG_Header(header));
+		captured.emplace_back(workingBuffer);
 	}
 }

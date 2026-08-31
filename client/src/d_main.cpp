@@ -100,7 +100,7 @@ void D_DoAdvanceDemo();
 
 void D_DoomLoop();
 
-extern int testingmode;
+extern dtime_t testingmode;
 extern bool gameisdead;
 extern bool M_DemoNoPlay;	// [RH] if true, then skip any demos in the loop
 extern DThinker ThinkerCap;
@@ -190,7 +190,7 @@ void D_ProcessEvents (void)
 	// [RH] If testing mode, do not accept input until test is over
 	if (testingmode)
 	{
-		if (static_cast <dtime_t>(testingmode) <= I_MSTime() * TICRATE / 1000)
+		if (testingmode <= I_MSTime() * TICRATE / MSECS_PER_SEC)
 			M_RestoreVideoMode();
 		else
 			M_ModeFlashTestText();
@@ -546,7 +546,7 @@ void D_DoAdvanceDemo (void)
     // [Russell] - Still need this toilet humor for now unfortunately
 	if (!pagename.empty())
 	{
-		const patch_t* patch = W_CachePatch(pagename);
+		const patch_t* patch = W_CachePatch(W_CheckWidescreenPatch(pagename));
 
 		page_width = patch->width();
 		page_height = patch->height() + (patch->height() / 5);
@@ -892,14 +892,15 @@ void D_DoomMain()
 		const char* skipParams[] = {
 		    "+connect", "+demotest", "+map",      "+netplay",  "+playdemo",
 		    "-connect", "-file",     "-playdemo", "-timedemo", "-warp",
+		    "+wad",     "-map",      "-wad",      "-iwad",     "-netplay",
+		    "-deh",     "-bex"
 		};
 
 		bool shouldSkip = std::any_of(std::begin(skipParams), std::end(skipParams), [](const auto& param){ return ::Args.CheckValue(param); });
 
-		// Skip boot window if we pass a single argument that isn't the
-		// start of a standard parameter - it must be a path.
-		if (!shouldSkip && ::Args.NumArgs() == 2 && ::Args[1][0] != '+' &&
-		    ::Args[1][0] != '-')
+		// Skip boot window if we were handed files on their own - they must be
+		// paths, as happens when they are dropped onto the executable.
+		if (!shouldSkip && ::Args.GatherBareFiles().NumArgs() > 0)
 		{
 			shouldSkip = true;
 		}
@@ -950,6 +951,7 @@ void D_DoomMain()
 
 	D_AddWadCommandLineFiles(newwadfiles);
 	D_AddDehCommandLineFiles(newpatchfiles);
+	D_AddStartupWadFiles(newwadfiles, newpatchfiles);
 
     // do the deh processing
 	D_LoadResourceFiles(newwadfiles, newpatchfiles);

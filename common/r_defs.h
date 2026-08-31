@@ -118,7 +118,8 @@ enum
 // Ceiling/floor flags
 enum
 {
-	SECF_ABSLIGHTING	= 1		// floor/ceiling light is absolute, not relative
+	SECF_ABSLIGHTING	= 1,	// floor/ceiling light is absolute, not relative
+	SECF_SPRINGPAD		= 2		// floor bounces actors at their landing velocity
 };
 
 // Misc sector flags
@@ -693,7 +694,7 @@ struct vissprite_t
     //  maxbright frames as well
     shaderef_t		colormap;
 
-	int 			mobjflags;
+	ActorFlags1		mobjflags;
 	int				statusflags;	// Status of player to show (powers, etc)
 	bool			spectator;		// [Blair] Mark if this visprite belongs to a spectator.
 

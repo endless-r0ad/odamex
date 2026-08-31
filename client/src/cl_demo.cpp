@@ -25,7 +25,7 @@
 
 #include "odamex.h"
 
-#include "cl_main.h"
+#include "cl_parse.h"
 #include "p_ctf.h"
 #include "d_player.h"
 #include "m_argv.h"
@@ -37,9 +37,11 @@
 #include "st_stuff.h"
 #include "p_mobj.h"
 #include "clc_message.h"
+#include "msg_message.h"
 #include "svc_message.h"
 #include "g_gametype.h"
 #include "g_game.h"
+#include "g_spree.h"
 
 #include "PacketHeaderType.h"
 #include "cl_freecam.h"
@@ -697,6 +699,15 @@ void ClientNetDemo::readMessages(buf_t* netbuffer)
 	readMessageBody(netbuffer, len);
 }
 
+void NetDemo::capturePacketHeader(const PacketHeaderType& header)
+{
+	if (isRecording())
+	{
+		workingBuffer.clear();
+		MSG_WriteSVCBuffer(& workingBuffer, MSG_Header(header));
+		captured.emplace_back(workingBuffer);
+	}
+}
 
 //
 // writeLauncherSequence()
@@ -1312,6 +1323,8 @@ void ClientNetDemo::writeSnapshotData(std::vector<byte>& buf)
 
 	arc << rollerState;
 
+	P_SerializeSprees(arc);
+
 	byte check = 0x1d;
 	arc << check;          // consistancy marker
 
@@ -1454,6 +1467,8 @@ void ClientNetDemo::readSnapshotData(std::vector<byte>& buf)
 	G_InitNew(mapname);
 	displayplayer_id = consoleplayer_id = 1;
 	savegamerestore = false;
+
+	P_SerializeSprees(arc);
 
 	// read consistancy marker
 	byte check;

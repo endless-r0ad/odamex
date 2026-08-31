@@ -623,14 +623,15 @@ void P_MovePlayer (player_t& player)
 		}
 		else if (sv_allowjump && player.mo->onground && !player.jumpTics)
 		{
-			player.mo->momz += 8*FRACUNIT;
+			const bool springpad = player.mo->floorsector->flags & SECF_SPRINGPAD;
+			player.mo->momz += springpad ? 4*FRACUNIT : 8*FRACUNIT;
 
 //			[SL] No jumping sound...
 //			if(!player.spectator)
 //				UV_SoundAvoidPlayer(player.mo, CHAN_VOICE, "player/male/jump1", ATTN_NORM);
 
             player.mo->flags2 &= ~MF2_ONMOBJ;
-            player.jumpTics = 18;
+            player.jumpTics = springpad ? 0 : 18;
 		}
 	}
 }
@@ -1406,8 +1407,8 @@ player_t::player_t() :
 	hazardinterval(0),
 	LastMessage(LastMessage_s()),
 	to_spawn(std::queue<AActor::AActorPtr>()),
+	playerInfoIsRequested(false),
 	inventoryCheckRequestsAreEnabled(false),
-	inventoryCheckIsRequestedForTic(-1),
 	client{}
 {
 	cmd.clear();
@@ -1421,7 +1422,7 @@ player_t::player_t() :
 	// Can't put this in initializer list?
 	attacker = AActor::AActorPtr();
 
-	pspdef_t zeropsp = { NULL, 0, 0, 0 };
+	const pspdef_t zeropsp = { .statenum = S_NULL, .tics = 0, .sx = 0, .sy = 0 };
 	psprites.fill(zeropsp);
 	ArrayInit(oldvelocity, 0);
 

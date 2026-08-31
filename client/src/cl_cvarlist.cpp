@@ -24,7 +24,9 @@
 
 #include "odamex.h"
 
+#include "am_map.h"
 #include "s_sound.h"
+#include "i_input.h"
 #include "i_music.h"
 
 // Automap
@@ -56,6 +58,17 @@ CVAR(					am_showtime, "1", "",
 
 CVAR(					am_classicmapstring, "0", "",
 						CVARTYPE_BOOL, CVAR_CLIENTARCHIVE)
+
+
+CVAR_RANGE(am_showauthor, "2",
+		"How the map author is shown on the automap.\n"
+		"// 0 - Off\n"
+		"// 1 - Static\n"
+		"// 2 - Fade in/out with map name\n"
+		"// 3 - Marquee in/out with map name\n"
+		"// 4 - Teletype effect with map name",
+		CVARTYPE_BYTE, CVAR_CLIENTARCHIVE | CVAR_NOENABLEDISABLE,
+		AM_AUTHOR_OFF, AM_AUTHOR_TELETYPE)
 
 CVAR(					am_usecustomcolors, "0", "",
 						CVARTYPE_BOOL, CVAR_CLIENTARCHIVE)
@@ -340,6 +353,13 @@ CVAR (joy_invert, "0", "", CVARTYPE_FLOAT, CVAR_CLIENTARCHIVE)
 
 CVAR_RANGE (joy_deadzone, "0.20", "", CVARTYPE_FLOAT, CVAR_CLIENTARCHIVE | CVAR_NOENABLEDISABLE,  0.0f, 0.75f)
 
+CVAR_RANGE(joy_gamepadmode, "0",
+		"Sets the behavior of on-screen prompts of when to name gamepad buttons instead of keyboard keys.\n"
+		"// 0 - Follow whichever device was used last\n"
+		"// 1 - Mouse input does not switch away from the gamepad\n"
+		"// 2 - Always show gamepad keys",
+		CVARTYPE_BYTE, CVAR_CLIENTARCHIVE | CVAR_NOENABLEDISABLE, GAMEPADMODE_AUTO, GAMEPADMODE_ALWAYS)
+
 CVAR_RANGE(joy_lefttrigger_deadzone, "0.2", "Sets the required pressure to trigger a press on the left trigger (Analog controllers only)",
 					CVARTYPE_FLOAT, CVAR_CLIENTARCHIVE | CVAR_NOENABLEDISABLE, 0.01f, 1.0f)
 
@@ -425,7 +445,7 @@ CVAR_FUNC_DECL(		cl_name, "Player", "",
 #endif
 
 CVAR(				cl_color, "40 cf 00", "",
-					CVARTYPE_STRING, CVAR_USERINFO | CVAR_CLIENTARCHIVE | CVAR_NOENABLEDISABLE | CVAR_NOSET)
+					CVARTYPE_STRING, CVAR_USERINFO | CVAR_NOENABLEDISABLE | CVAR_NOSET)
 
 CVAR_FUNC_DECL(		cl_customcolor, "40 cf 00", "",
 					CVARTYPE_STRING, CVAR_CLIENTARCHIVE | CVAR_NOENABLEDISABLE)

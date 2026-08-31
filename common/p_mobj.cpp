@@ -628,13 +628,11 @@ void AActor::ClearFriendly()
 }
 
 
-void AActor::SetFriendly(bool i_isFriendly, const AActor* owner)
+void AActor::SetFriendly(OUtil::SafeBool i_isFriendly, const AActor* owner)
 {
 	if (i_isFriendly)
 	{
 		this->flags |= MF_FRIEND;
-
-		P_FriendlyEffects(this);
 	}
 	else
 	{
@@ -653,6 +651,11 @@ void AActor::SetFriendly(bool i_isFriendly, const AActor* owner)
 			this->friend_playerid = owner->friend_playerid;
 			this->friend_teamid = owner->friend_teamid;
 		}
+	}
+
+	if (i_isFriendly)
+	{
+		P_FriendlyEffects(this);
 	}
 }
 
@@ -1238,6 +1241,37 @@ void AActor::RunThink ()
 	}
 }
 
+namespace
+{
+	struct ReferencedMobjIdsType
+	{
+		uint32_t targetId   { 0 };
+		uint32_t goalId     { 0 };
+		uint32_t lastEnemyId{ 0 };
+	};
+
+	std::unordered_map<uint32_t, ReferencedMobjIdsType> s_unresolvedIds;
+}
+
+void P_ResolveMobjToMobjPointers()
+{
+	auto setPointer = [](AActor::AActorPtr& destPtr, uint32_t netId)
+	{
+		AActor* other = P_FindThingById(netId);
+		destPtr = other ? other->ptr() : AActor::AActorPtr();
+	};
+
+	for (auto& [actorId, otherIDs] : s_unresolvedIds)
+	{
+		if (AActor* actorPtr = P_FindThingById(actorId))
+		{
+			setPointer(actorPtr->target,    otherIDs.targetId);
+			setPointer(actorPtr->goal,      otherIDs.goalId);
+			setPointer(actorPtr->lastenemy, otherIDs.lastEnemyId);
+		}
+	}
+	s_unresolvedIds.clear();
+}
 
 void AActor::Serialize (FArchive &arc)
 {
@@ -1254,11 +1288,6 @@ void AActor::Serialize (FArchive &arc)
 			<< z
 			<< pitch
 			<< angle
-
-			// [SL] Removed AActor::roll
-			// delete this next time saved-game compatibilty changes
-			<< 0
-
 			<< sprite
 			<< frame
 			<< effects
@@ -1284,8 +1313,8 @@ void AActor::Serialize (FArchive &arc)
 			<< movedir
 			<< visdir
 			<< movecount
-			/*<< target ? target->netid : 0*/
-			/*<< lastenemy ? lastenemy->netid : 0*/
+			<< (target ? target->netid : uint32_t(0))
+			<< (lastenemy ? lastenemy->netid : uint32_t(0))
 			<< reactiontime
 			<< threshold
 			<< playerid
@@ -1298,8 +1327,7 @@ void AActor::Serialize (FArchive &arc)
 			<< args[2]
 			<< args[3]
 			<< args[4]
-			/*<< goal ? goal->netid : 0*/
-			<< 0_u32
+			<< (goal ? goal->netid : uint32_t(0))
 			<< translucency
 			<< waterlevel
 			<< gear
@@ -1334,10 +1362,13 @@ void AActor::Serialize (FArchive &arc)
 	}
 	else
 	{
-		unsigned dummy;
 		unsigned playerid;
 		int newnetid;
+		int dummyInt;
 		AActor* tmptracer;
+		uint32_t targetId;
+		uint32_t goalId;
+		uint32_t lastEnemyId;
 
 		arc >> newnetid
 			>> x
@@ -1345,11 +1376,6 @@ void AActor::Serialize (FArchive &arc)
 			>> z
 			>> pitch
 			>> angle
-
-			// [SL] Removed AActor::roll
-			// delete this next time saved-game compatibilty changes
-			>> dummy
-
 			>> sprite
 			>> frame
 			>> effects
@@ -1375,8 +1401,8 @@ void AActor::Serialize (FArchive &arc)
 			>> movedir
 			>> visdir
 			>> movecount
-			/*>> target->netid*/
-			/*>> lastenemy->netid*/
+			>> targetId
+			>> lastEnemyId
 			>> reactiontime
 			>> threshold
 			>> playerid
@@ -1389,8 +1415,7 @@ void AActor::Serialize (FArchive &arc)
 			>> args[2]
 			>> args[3]
 			>> args[4]
-			/*>> goal->netid*/
-			>> dummy
+			>> goalId
 			>> translucency
 			>> waterlevel
 			>> gear
@@ -1398,7 +1423,7 @@ void AActor::Serialize (FArchive &arc)
 			>> spawnRndindex
 			>> mode
 			>> updatedDuringLocalTic
-			>> updatedDuringServerTic
+			>> dummyInt //This used to be updatedDuringServerTic, but that caused netdemo desyncs.  FIXME: header tics
 			>> spawnTic
 			>> mobjtic
 			>> credibility;
@@ -1406,6 +1431,14 @@ void AActor::Serialize (FArchive &arc)
 		tracer.init(tmptracer);
 
 		P_SetThingId(this, newnetid);
+
+		s_unresolvedIds.emplace(netid,
+		                        ReferencedMobjIdsType
+		                        {
+		                            .targetId    = targetId,
+		                            .goalId      = goalId,
+		                            .lastEnemyId = lastEnemyId
+		                        });
 
 		uint32_t trans;
 		arc >> trans;
@@ -1515,7 +1548,7 @@ static std::optional<MobjModeEnum> IdentifyMode(const AActor& mobj, int32_t stat
 // Returns true if the mobj is still present.
 SetMobStateResultEnum P_SetMobjState(AActor *mobj, int32_t state, bool cl_update)
 {
-	state_t* st;
+	const state_t* st;
 	int cycle_counter = 0;
 
 	do
@@ -1827,7 +1860,7 @@ static void P_ApplyXYFriction(AActor* mo)
 	const bool isRealPlayer             = isPlayer and not isVoodooOrAvatar;
 	const bool isUserCommandingMotion   = mo->player and (mo->player->cmd.forwardmove != 0 or
 	                                                      mo->player->cmd.sidemove != 0);
-	const bool isOnConveyor             = mo->oflags & MFO_ISONCONVEYOR;
+	const auto isOnConveyor             = mo->oflags & MFO_ISONCONVEYOR;
 	const bool isSuperSlowVoodoo        = isVoodooOrAvatar and co_voodooscroller;
 
 	const bool keepInMotion = (isOnConveyor and not isSuperSlowVoodoo)
@@ -2078,7 +2111,7 @@ static void P_ApplyGravity(AActor* mo, fixed_t momz_change)
 			fixed_t sinkspeed = mo->flags & MF_CORPSE ? -WATER_SINK_SPEED/3 : -WATER_SINK_SPEED;
 
 			if (mo->momz < sinkspeed)
-				mo->momz = MIN(startmomz, sinkspeed);
+				mo->momz = std::min(startmomz, sinkspeed);
 			else
 				mo->momz = startmomz + ((mo->momz - startmomz) >> WATER_SINK_FACTOR);
 		}
@@ -2156,6 +2189,14 @@ static bool P_ClipMovementToFloor(AActor* mo)
 		if (mo->subsector->sector->SecActTarget &&
 		    P_FloorHeight(mo->x, mo->y, mo->subsector->sector) == mo->floorz)
 			A_TriggerAction(mo->subsector->sector->SecActTarget, mo, SECSPAC_HitFloor);
+
+		// [RV] Bounce actors upward at their landing velocity.
+		if (!(mo->flags & MF_MISSILE) && mo->floorsector->flags & SECF_SPRINGPAD)
+		{
+			mo->momz = -mo->momz;
+			mo->z = mo->floorz;
+			return true;
+		}
 
 		// Lost Soul hit the floor
 		if (mo->flags & MF_SKULLFLY && P_CorrectLostSoulBounce())
@@ -2894,10 +2935,10 @@ bool P_SeekerMissile(AActor* actor, AActor* seekTarget, angle_t thresh, angle_t 
 //
 AActor* P_SpawnMissile (AActor *source, AActor *dest, mobjtype_t type)
 {
-    AActor *th;
-    angle_t	an;
-    int		dist;
-    fixed_t     dest_x, dest_y, dest_z, dest_flags;
+    fixed_t dest_x;
+    fixed_t dest_y;
+    fixed_t dest_z;
+	ActorFlags1 dest_flags;
 
 	// denis: missile spawn code from chocolate doom
 	//
@@ -2922,16 +2963,16 @@ AActor* P_SpawnMissile (AActor *source, AActor *dest, mobjtype_t type)
         dest_x = 0;
         dest_y = 0;
         dest_z = 0;
-        dest_flags = 0;
+        dest_flags.clear();
     }
 
-	th = new AActor (source->x, source->y, source->z + 4*8*FRACUNIT, type);
+	auto* th = new AActor (source->x, source->y, source->z + 32_fx, type);
 
     if (th->info->seesound)
 		S_Sound (th, CHAN_VOICE, th->info->seesound, 1, ATTN_NORM);
 
     th->target = source->ptr();	// where it came from
-    an = P_PointToAngle (source->x, source->y, dest_x, dest_y);
+    angle_t an = P_PointToAngle (source->x, source->y, dest_x, dest_y);
 
 	// Horde boss? Make their projectiles look bossy
 	if (source->oflags & MFO_ISHORDEBOSS)
@@ -2954,11 +2995,8 @@ AActor* P_SpawnMissile (AActor *source, AActor *dest, mobjtype_t type)
 	th->momx = FixedMul(th->info->speed, finecosine[an]);
 	th->momy = FixedMul(th->info->speed, finesine[an]);
 
-    dist = P_AproxDistance (dest_x - source->x, dest_y - source->y);
-	dist = dist / th->info->speed;
-
-    if (dist < 1)
-		dist = 1;
+    int dist = P_AproxDistance (dest_x - source->x, dest_y - source->y);
+	dist = std::max(dist / th->info->speed, 1);
 
     th->momz = (dest_z - source->z) / dist;
 
@@ -3142,7 +3180,7 @@ void P_RespawnSpecials (void)
 	if (itemrespawnque.empty())
 		return;
 
-	const auto& [mthing, respawntime] = itemrespawnque.front();
+	const auto [mthing, respawntime] = itemrespawnque.front();
 
 	// wait a certain number of seconds before respawning this special
 	if (level.time - respawntime < sv_itemrespawntime * TICRATE)
@@ -3154,6 +3192,7 @@ void P_RespawnSpecials (void)
 	// find which type to spawn
 	auto it = spawn_map.find(mthing.type);
 	if (it == spawn_map.end() ||
+		// TODO: make this account for the possibility that dehacked has replaced these things
 		// Allow or not Partial Invisibility & Invulnerability from respawning
 	    (!sv_respawnsuper && (mthing.type == 2022 || mthing.type == 2024)) ||
 		// pop barrels as well if needed
@@ -3166,14 +3205,8 @@ void P_RespawnSpecials (void)
 
 	const fixed_t z = it->second->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
-	// spawn a teleport fog at the new spot
-	AActor* mo = new AActor (x, y, z, MT_IFOG);
-	SV_SpawnMobj(mo);
-	if (clientside)
-		S_Sound (mo, CHAN_VOICE, "misc/spawn", 1, ATTN_IDLE);
-
 	// spawn it
-	mo = new AActor (x, y, z, it->second->type);
+	auto* mo = new AActor(x, y, z, it->second->type);
 	mo->spawnpoint = mthing;
 	mo->angle = ANG45 * (mthing.angle / 45);
 
@@ -3188,6 +3221,28 @@ void P_RespawnSpecials (void)
 	}
 
 	mo->special = 0;
+
+	// a solid thing (usually a barrel) would trap whoever is standing there,
+	// so hold it back until the spot is clear
+	if ((mo->flags & MF_SOLID) && !P_TestMobjLocation(mo))
+	{
+		// destroying a barrel puts it back in the queue on its own
+		const bool requeued = mo->info->type == MT_BARREL;
+
+		mo->Destroy();
+		itemrespawnque.pop();
+
+		if (!requeued)
+			itemrespawnque.emplace(mthing, level.time);
+
+		return;
+	}
+
+	// spawn a teleport fog at the new spot
+	auto* fog = new AActor (x, y, z, MT_IFOG);
+	SV_SpawnMobj(fog);
+	if (clientside)
+		S_Sound (fog, CHAN_VOICE, "misc/spawn", 1, ATTN_IDLE);
 
 	// pull it from the que
 	itemrespawnque.pop();
@@ -3493,12 +3548,13 @@ void P_SpawnMapThing (mapthing2_t& mthing, int position)
 	                      (mthing.type >= 9992 && mthing.type <= 9999);
 	const bool isSoundSource = (mthing.type >= 14001 && mthing.type <= 14065);
 	const bool isMusicChanger = (mthing.type >= 14100 && mthing.type <= 14165);
+	const bool isSpringPad = inSpawnMap && spawn_map[mthing.type]->type == MT_SPRINGPAD;
 
 	// only servers control spawning of items
 	// EXCEPT the client must spawn Type 14 (teleport exit) and player spawn points for avatars.
 	// otherwise teleporters or avatars won't work well.
 	// Also spawn sector special things, fixes some other teleport issues.
-	if (!serverside && !(isPlayerCoopSpawnPoint || isTeleportDest || isSecAct || isSoundSource || isMusicChanger))
+	if (!serverside && !(isPlayerCoopSpawnPoint || isTeleportDest || isSecAct || isSoundSource || isMusicChanger || isSpringPad))
 	{
 		return;
 	}
@@ -3634,8 +3690,15 @@ void P_SpawnMapThing (mapthing2_t& mthing, int position)
 		return;
 
 	// check for appropriate skill level
-	if (!(mthing.flags & G_GetCurrentSkill().spawn_filter))
+	// TODO: change type of spawn_filter to MapThingFlags after merging with type-safe mapinfo PR
+	if (!(mthing.flags & combo(MapThingFlags::unsafe_from_int(static_cast<int16_t>(G_GetCurrentSkill().spawn_filter)))))
 		return;
+
+	if (isSpringPad)
+	{
+		P_PointInSubsector(mthing.x << FRACBITS, mthing.y << FRACBITS)->sector->flags |= SECF_SPRINGPAD;
+		return;
+	}
 
 	// [RH] sound sequence overrides
 	if (mthing.type >= 1400 && mthing.type < 1410)
@@ -3755,12 +3818,12 @@ void P_SpawnMapThing (mapthing2_t& mthing, int position)
 		case MT_MISC28: // plasma gun
 			if (!multiplayer && g_thingfilter != -1 && !G_GetCurrentSkill().spawn_multi)
 			{
-				if ((mthing.flags & (MTF_DEATHMATCH | MTF_SINGLE)) == MTF_DEATHMATCH)
+				if ((mthing.flags & MTF_DEATHMATCH) && !(mthing.flags & MTF_SINGLE))
 					return;
 			}
 			else
 			{
-				if ((mthing.flags & (MTF_FILTER_COOPWPN)))
+				if ((mthing.flags & MTF_FILTER_COOPWPN))
 					return;
 			}
 			break;

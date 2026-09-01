@@ -138,7 +138,8 @@ size_t Packet::Send(int i_currentTic, int i_destinationTic, SequenceSender& i_se
 	    m_outgoingPacketBuffer.size() > PacketHeaderType::PACKET_HEADER_SIZE &&
 	    not m_outgoingPacketBuffer.overflowed)
 	{
-		m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
+    netdemo->capturePacketHeader(m_header);
+    m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
 		netdemo->capture(&m_outgoingPacketBuffer);
 	}
 
@@ -162,11 +163,12 @@ size_t Packet::SendHighPriority(int i_currentTic, int i_destinationTic,
 	m_outgoingPacketBuffer.SeekWrite(0, buf_t::BT_START);
 	m_header.Pack(m_outgoingPacketBuffer);
 
-    if (netdemo && netdemo->isRecording() &&
+	if (netdemo && netdemo->isRecording() &&
 	    m_outgoingPacketBuffer.size() > PacketHeaderType::PACKET_HEADER_SIZE &&
 	    not m_outgoingPacketBuffer.overflowed)
 	{
-		m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
+    netdemo->capturePacketHeader(m_header);
+    m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
 		netdemo->capture(&m_outgoingPacketBuffer);
 	}
 

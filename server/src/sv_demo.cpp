@@ -639,6 +639,8 @@ void ServerNetDemo::writeSnapshotData(std::vector<byte>& buf)
 		}
 	}
 
+  P_SerializeSprees(arc);
+
 	byte check = 0x1d;
 	arc << check;          // consistancy marker
 

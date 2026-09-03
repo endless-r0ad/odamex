@@ -22,7 +22,6 @@
 #include "Packet.h"
 
 #include "SequenceSender.h"
-#include "netdemo.h"
 
 Packet::Packet() :
 	m_outgoingPacketBuffer {MAX_UDP_PACKET}
@@ -106,7 +105,7 @@ size_t Packet::ReSend(int i_historicalLocalTic, int i_destinationTic, int sequen
 	return CompressAndSend(i_dest);
 }
 
-size_t Packet::Send(int i_currentTic, int i_destinationTic, SequenceSender& i_sender, const netadr_t& i_dest, NetDemo* netdemo)
+size_t Packet::Send(int i_currentTic, int i_destinationTic, SequenceSender& i_sender, const netadr_t& i_dest)
 {
 	m_header.originatorTic  = i_currentTic;
 	m_header.destinationTic = i_destinationTic;
@@ -134,21 +133,10 @@ size_t Packet::Send(int i_currentTic, int i_destinationTic, SequenceSender& i_se
 	m_outgoingPacketBuffer.SeekWrite(0, buf_t::BT_START);
 	m_header.Pack(m_outgoingPacketBuffer);
 
-	if (netdemo && netdemo->isRecording() &&
-	    m_outgoingPacketBuffer.size() > PacketHeaderType::PACKET_HEADER_SIZE &&
-	    not m_outgoingPacketBuffer.overflowed)
-	{
-    netdemo->capturePacketHeader(m_header);
-    m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
-		netdemo->capture(&m_outgoingPacketBuffer);
-	}
-
 	return CompressAndSend(i_dest);
 }
 
-size_t Packet::SendHighPriority(int i_currentTic, int i_destinationTic,
-                                SequenceSender& i_sender, const netadr_t& i_dest,
-                                NetDemo* netdemo)
+size_t Packet::SendHighPriority(int i_currentTic, int i_destinationTic, SequenceSender& i_sender, const netadr_t& i_dest)
 {
 	if (m_header.reliableSize)
 	{
@@ -162,15 +150,6 @@ size_t Packet::SendHighPriority(int i_currentTic, int i_destinationTic,
 
 	m_outgoingPacketBuffer.SeekWrite(0, buf_t::BT_START);
 	m_header.Pack(m_outgoingPacketBuffer);
-
-	if (netdemo && netdemo->isRecording() &&
-	    m_outgoingPacketBuffer.size() > PacketHeaderType::PACKET_HEADER_SIZE &&
-	    not m_outgoingPacketBuffer.overflowed)
-	{
-    netdemo->capturePacketHeader(m_header);
-    m_outgoingPacketBuffer.readpos = PacketHeaderType::PACKET_HEADER_SIZE;
-		netdemo->capture(&m_outgoingPacketBuffer);
-	}
 
 	return CompressAndSend(i_dest);
 }

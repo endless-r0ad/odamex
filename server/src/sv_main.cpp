@@ -1669,7 +1669,7 @@ int SV_UpdateHiddenMobj(player_t& pl, AActor *mo, int updated, AwarenessEnum new
 MessageResultEnum SV_SendPacket(player_t& player)
 {
 	player.client.messenger->SetDestinationTic(player.tic);
-	return player.client.messenger->SendAll(gametic, player.client.address, netdemo.isRecording() ? &netdemo : nullptr);
+	return player.client.messenger->SendAll(gametic, player.client.address);
 }
 
 void SV_BroadcastNoiseAlert(const sector_t& sector)
@@ -3811,6 +3811,81 @@ void SV_WriteCommandsForPlayer(player_t& player)
 	}
 }
 
+void SV_WriteNetdemoSnapshot()
+{
+	static buf_t tempbuf(MAX_UDP_PACKET);
+
+	SZ_Clear(&tempbuf);
+	MSG_WriteSVCBuffer(&tempbuf, SVC_ServerGametic(gametic, 0, 0));
+	netdemo.capture(&tempbuf);
+	netdemo.writeMessages();
+
+	for (player_t& p : players)
+	{
+		if (not p.mo || p.spectator)
+			continue;
+
+		AActor *mo = p.mo;
+
+		// all ingame players treated like consoleplayers in a serverside demo
+		SZ_Clear(&tempbuf);
+		MSG_WriteSVCBuffer(&tempbuf, SVC_UpdateLocalPlayer(*mo, gametic));
+		netdemo.capture(&tempbuf);
+		netdemo.writeMessages();
+
+		SZ_Clear(&tempbuf);
+		MSG_WriteSVCBuffer(&tempbuf, SVC_PlayerInfo(p));
+		netdemo.capture(&tempbuf);
+		netdemo.writeMessages();
+
+		SZ_Clear(&tempbuf);
+		MSG_WriteSVCBuffer(&tempbuf, SVC_UpdatePing(p));
+		netdemo.capture(&tempbuf);
+		netdemo.writeMessages();
+
+	}
+
+	if (G_IsHordeMode())
+	{
+		SZ_Clear(&tempbuf);
+		MSG_WriteSVCBuffer(&tempbuf, SVC_HordeInfo(P_HordeInfo()));
+		netdemo.capture(&tempbuf);
+		netdemo.writeMessages();
+	}
+
+	for (auto& voodooInfo : voodoostarts)
+	{
+		if (voodooInfo.mobj and ((voodooInfo.mobj->netid + gametic) % 7) == 0)
+		{
+			voodooInfo.mobj->updatedDuringLocalTic = gametic;    // Avoid a potential duplicate send.
+			SZ_Clear(&tempbuf);
+			MSG_WriteSVCBuffer(&tempbuf, SVC_UpdateMobj(*voodooInfo.mobj));
+			netdemo.capture(&tempbuf);
+			netdemo.writeMessages();
+		}
+	}
+
+	// this is SV_UpdateMovingSectors, TODO
+	// std::list<movingsector_t>::iterator itr;
+	// for (itr = movingsectors.begin(); itr != movingsectors.end(); ++itr)
+	// {
+	// 	sector_t *sector = itr->sector;
+
+	// 	SV_SendMovingSectorUpdate(player, sector);
+	// }
+
+	// TODO
+	// auto& unsortedThinkers = DThinker::GetThinkerVectorRef();
+
+	// for (DThinker* thinker : unsortedThinkers)
+	// {
+	// 	if (thinker->IsKindOf(RUNTIME_CLASS(AActor)))
+	// 	{
+	// 		// save MOBJ state TODO
+	// 	}
+	// }
+}
+
 //
 // SV_WriteCommands
 //
@@ -3820,6 +3895,11 @@ void SV_WriteCommands(void)
 	// they can be reconciled later for unlagging
 	Unlag::getInstance().recordPlayerPositions();
 	Unlag::getInstance().recordSectorPositions();
+
+	if (netdemo.isRecording())
+	{
+		SV_WriteNetdemoSnapshot();
+	}
 
 	// Palm off the job of writing the player messages onto the worker threads.
 	std::vector<std::future<void> > futures;

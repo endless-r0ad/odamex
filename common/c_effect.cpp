@@ -327,6 +327,52 @@ void P_ThinkParticles (void)
 	}
 }
 
+void P_DrawTracer(const angle_t angle, const fixed_t distance, const v3double_t& start, const v3double_t& end)
+{
+	if (not clientside)
+		return;
+
+	v3double_t step, dir, pos, extend, point;
+
+	M_SubVec3(&dir, &end, &start);
+
+	double length = M_LengthVec3(dir);
+	int steps = static_cast<int>(length*0.02);
+
+	if (not length) // line is 0 length, so nothing to do
+		return;
+
+	AActor* mo = consoleplayer().camera;
+
+	double ilength = 1.0 / length;
+
+	S_Sound(mo, CHAN_WEAPON, "weapons/railgf", 1, ATTN_NORM);
+
+	M_ScaleVec3(&dir, &dir, ilength);
+	M_PerpendicularVec3(&extend, &dir);
+	M_ScaleVec3(&extend, &extend, 50.0);
+	M_ScaleVec3(&step, &dir, 50.0);
+
+	pos = start;
+
+	for (int i = steps; i; i--)
+	{
+		particle_t* p = JitterParticle(33);
+
+		if (!p)
+			return;
+
+		p->size = 2;
+		p->x = FLOAT2FIXED(pos.x);
+		p->y = FLOAT2FIXED(pos.y);
+		p->z = FLOAT2FIXED(pos.z);
+		p->accz -= FRACUNIT / 4096;
+		M_AddVec3(&pos, &pos, &step);
+
+		p->color = green;
+	}
+
+}
 
 void P_DrawRailTrail(const v3double_t &start, const v3double_t &end)
 {

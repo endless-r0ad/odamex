@@ -38,6 +38,8 @@
 #include "svc_message.h"
 #include "i_system.h"
 
+#include "c_effect.h"
+
 // State.
 #include "p_pspr.h"
 
@@ -1663,6 +1665,24 @@ void A_BFGSpray(AActor* mo)
 		// mo->target is the originator (player)
 		//	of the missile
 		P_AimLineAttack (mo->target, an, 16*64*FRACUNIT, false);
+
+		if (clientside && mo->target->player && mo->target->player->id == consoleplayer_id)
+		{
+			const fixed_t bfg_distance = 16 * 64 * FRACUNIT;
+			v3double_t start, end;
+
+			const player_t* p = &idplayer(consoleplayer_id);
+
+			const fixed_t shoot_z = p->mo->z + (p->mo->height >> 1) + 8 * FRACUNIT;
+			const fixed_t x2 = linetarget ? linetarget->x : p->mo->x + ((bfg_distance >> FRACBITS) *finecosine[an >> ANGLETOFINESHIFT]);
+			const fixed_t y2 = linetarget ? linetarget->y : p->mo->y + ((bfg_distance>>FRACBITS) * finesine[an >> ANGLETOFINESHIFT]);
+
+			M_SetVec3(&start, p->mo->x, p->mo->y, shoot_z);
+			M_SetVec3(&end, x2, y2, shoot_z);
+
+			P_DrawTracer(an>>ANGLETOFINESHIFT, bfg_distance>>FRACBITS, start, end);
+		}
+
 
 		if (!linetarget)
 			continue;

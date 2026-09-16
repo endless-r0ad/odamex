@@ -54,7 +54,7 @@ void P_RunEffects();
 void P_RunEffect (const AActor *actor, int effects);
 
 void P_DrawRailTrail(const v3double_t &start, const v3double_t &end);
-void P_DrawTracer(const angle_t angle, const fixed_t distance, const v3double_t& start, const v3double_t& end);
+void P_DrawTracer(const v3double_t& start, const v3double_t& end);
 void P_DrawSplash (int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int kind);
 void P_DrawSplash2 (int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int updown, int kind);
 void P_DisconnectEffect (const AActor *actor);

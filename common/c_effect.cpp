@@ -327,37 +327,39 @@ void P_ThinkParticles (void)
 	}
 }
 
-void P_DrawTracer(const angle_t angle, const fixed_t distance, const v3double_t& start, const v3double_t& end)
+void P_DrawTracer(const v3double_t& start, const v3double_t& end)
 {
 	if (not clientside)
 		return;
 
-	v3double_t step, dir, pos, extend, point;
+	v3double_t step;
+	v3double_t dir;
+	v3double_t pos;
+	v3double_t extend;
+
+  const double space = 50.0;
 
 	M_SubVec3(&dir, &end, &start);
 
 	double length = M_LengthVec3(dir);
-	int steps = static_cast<int>(length*0.02);
+	int steps = static_cast<int>(length/space);
 
-	if (not length) // line is 0 length, so nothing to do
+	if (length <= 0) // line is 0 length, so nothing to do
 		return;
-
-	AActor* mo = consoleplayer().camera;
 
 	double ilength = 1.0 / length;
 
-	S_Sound(mo, CHAN_WEAPON, "weapons/railgf", 1, ATTN_NORM);
-
 	M_ScaleVec3(&dir, &dir, ilength);
 	M_PerpendicularVec3(&extend, &dir);
-	M_ScaleVec3(&extend, &extend, 50.0);
-	M_ScaleVec3(&step, &dir, 50.0);
+	M_ScaleVec3(&extend, &extend, space);
+	M_ScaleVec3(&step, &dir, space);
 
 	pos = start;
+  const int ttl = 33;
 
 	for (int i = steps; i; i--)
 	{
-		particle_t* p = JitterParticle(33);
+		particle_t* p = JitterParticle(ttl);
 
 		if (!p)
 			return;
@@ -369,7 +371,7 @@ void P_DrawTracer(const angle_t angle, const fixed_t distance, const v3double_t&
 		p->accz -= FRACUNIT / 4096;
 		M_AddVec3(&pos, &pos, &step);
 
-		p->color = green;
+		p->color = yellow;
 	}
 
 }

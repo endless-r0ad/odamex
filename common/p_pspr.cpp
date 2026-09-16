@@ -1669,7 +1669,8 @@ void A_BFGSpray(AActor* mo)
 		if (clientside && mo->target->player && mo->target->player->id == consoleplayer_id)
 		{
 			const fixed_t bfg_distance = 16 * 64 * FRACUNIT;
-			v3double_t start, end;
+			v3double_t start;
+			v3double_t end;
 
 			const player_t* p = &idplayer(consoleplayer_id);
 
@@ -1678,9 +1679,9 @@ void A_BFGSpray(AActor* mo)
 			const fixed_t y2 = linetarget ? linetarget->y : p->mo->y + ((bfg_distance>>FRACBITS) * finesine[an >> ANGLETOFINESHIFT]);
 
 			M_SetVec3(&start, p->mo->x, p->mo->y, shoot_z);
-			M_SetVec3(&end, x2, y2, shoot_z);
+			M_SetVec3(&end, x2, y2, linetarget ? linetarget->z : shoot_z);
 
-			P_DrawTracer(an>>ANGLETOFINESHIFT, bfg_distance>>FRACBITS, start, end);
+			P_DrawTracer(start, end);
 		}
 
 

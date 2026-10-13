@@ -43,6 +43,7 @@ extern bool      noservermsgs;
 extern int       last_received;
 
 extern NetDemo           netdemo;
+extern NetDemo           movieDemo;
 extern OdaMessenger      messenger;
 extern PlayerStateRoller rollerState;
 

@@ -20,9 +20,9 @@ public:
 	NetDemo& operator=(NetDemo&&) = default;
 
 	bool startPlaying(const std::string& filename);
-	bool startRecording(const std::string& filename);
+	bool startRecording(const std::string& filename, bool isMovieRecording = false);
 	bool stopPlaying();
-	bool stopRecording();
+	bool stopRecording(bool isMovieRecording = false);
 	bool pause();
 	bool resume();
 	bool seekNetdemotic(int requestedNetdemotic);
@@ -79,6 +79,14 @@ private:
 		MSG_HEADER,
 	};
 
+  enum netdemo_t
+	{
+		CLIENT = 0x01,
+		MOVIE
+	};
+
+  [[nodiscard]] bool isMovie() const    { return (streamHeader.netdemo_type == netdemo_t::MOVIE); }
+
 	struct message_header_t
 	{
 		byte        type    { 0 };
@@ -122,7 +130,7 @@ private:
 	void writeSnapshotData(std::vector<byte>& buf);
 
 	void writeChunk(const byte *data, size_t size, netdemo_message_t type);
-	bool writeFileHeader();
+	bool writeFileHeader(bool isMovieRecording = false);
 	bool readFileHeader();
 	static bool writeFormatDescription(std::fstream& io_stream);
 
@@ -189,6 +197,7 @@ private:
 		uint32_t    starting_gametic    { 0 };      // the gametic the demo starts at
 		uint32_t    ending_gametic      { 0 };      // the last gametic of the demo
 		std::string format_description;
+    byte        netdemo_type        { 0 };
 
 		bool Read(buf_t& io_buf);
 		bool Write(buf_t& io_buf) const;

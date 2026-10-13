@@ -49,23 +49,23 @@ buf_t& MessageQueue::Obtain()
 	return m_queue.back();
 }
 
-void MessageQueue::Write(msg_t id, const std::string& msg)
+void MessageQueue::Write(msg_t id, const std::string& msg, bool isMovie)
 {
-	if (simulated_connection)
+	if (simulated_connection && !isMovie)
 		return;
 
 	buf_t& buffer = Obtain();
 	buffer.WriteMessage(id, msg);
 }
 
-void MessageQueue::Write(const google::protobuf::Message& msg)
+void MessageQueue::Write(const google::protobuf::Message& msg, bool isMovie)
 {
-	if (simulated_connection)
+	if (simulated_connection && !isMovie)
 		return;
 
 	if (const auto messageId = MSG_Pack(m_serializationBuffer, msg))
 	{
-		Write(*messageId, m_serializationBuffer);
+		Write(*messageId, m_serializationBuffer, isMovie);
 	}
 }
 

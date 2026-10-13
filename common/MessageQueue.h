@@ -44,8 +44,8 @@ class MessageQueue
 		// Pushing messages
 		buf_t& Obtain();
 
-		void Write(const google::protobuf::Message& msg);
-		void Write(msg_t id, const std::string& msg);
+		void Write(const google::protobuf::Message& msg, bool isMovie = false);
+		void Write(msg_t id, const std::string& msg, bool isMovie = false);
 
 		// Using messages.
 		const buf_t& Front() const { return m_queue.front(); }

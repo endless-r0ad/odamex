@@ -158,13 +158,14 @@ void NetDemo::fatalError(const std::string &message)
 //   Assumes that demofp has been opened correctly elsewhere.  Does not close
 //   the file.
 
-bool NetDemo::writeFileHeader()
+bool NetDemo::writeFileHeader(bool movie)
 {
 	memcpy(fileHeader.identifier.data(), "ODAD", 4);
 	fileHeader.version = NETDEMOVER;
 	streamHeader.compression        = 0;
 	streamHeader.snapshot_spacing   = NetDemo::SNAPSHOT_SPACING;
 	streamHeader.format_description = thisBuildDescription;
+  streamHeader.netdemo_type = movie ? netdemo_t::MOVIE : netdemo_t::CLIENT;
 
 	demofp.seekp(0, std::ios::beg);
 	const auto startingPosition = demofp.tellp();
@@ -225,6 +226,7 @@ bool NetDemo::netdemo_stream_header4_t::Read(buf_t& io_buf)
 	io_buf.Read(starting_gametic);
 	io_buf.Read(ending_gametic);
 	io_buf.Read(format_description);
+  io_buf.Read(netdemo_type);
 
 	return not io_buf.overflowed;
 }
@@ -236,6 +238,7 @@ bool NetDemo::netdemo_stream_header4_t::Write(buf_t& io_buf) const
 	io_buf.Write(starting_gametic);
 	io_buf.Write(ending_gametic);
 	io_buf.Write(format_description);
+  io_buf.Write(netdemo_type);
 
 	return not io_buf.overflowed;
 }
@@ -376,7 +379,7 @@ void NetDemo::populateMessageIndexes()
 //   header is written which will be overwritten with the proper information
 //   in stopRecording().
 
-bool NetDemo::startRecording(const std::string &filename)
+bool NetDemo::startRecording(const std::string &filename, bool isMovieRecording)
 {
 	this->filename = filename;
 
@@ -408,7 +411,7 @@ bool NetDemo::startRecording(const std::string &filename)
 
 	// Note: The header is not finalized at this point.  Write it anyway to
 	// reserve space in the output file for it and overwrite it later.
-	if (not writeFileHeader())
+	if (not writeFileHeader(isMovieRecording))
 	{
 		error("Unable to write netdemo file header.");
 		return false;
@@ -433,7 +436,7 @@ bool NetDemo::startRecording(const std::string &filename)
 		writeConnectionSequence();
 		writeMessages();
 
-		captured.Write( odaproto::clc::NetDemoLoadSnap() );
+		captured.Write( odaproto::clc::NetDemoLoadSnap(), isMovie() );
 		writeMessages();
 
 		// Record any additional messages (usually a full update if auto-recording))
@@ -582,7 +585,7 @@ bool NetDemo::resume()
 //   Writes the netdemo index to file and rewrites the netdemo file header before
 //   closing the netdemo file.
 
-bool NetDemo::stopRecording()
+bool NetDemo::stopRecording(bool isMovieRecording)
 {
 	if (!isRecording())
 	{
@@ -603,7 +606,7 @@ bool NetDemo::stopRecording()
 	demofp.flush();
 
 	// rewrite the header for ending_gametic
-	if (not writeFileHeader())
+	if (not writeFileHeader(isMovieRecording))
 	{
 		error("Unable to write updated netdemo file header.");
 		return false;
@@ -745,7 +748,7 @@ void NetDemo::writeMessages()
 		player_t& player = consoleplayer();
 		if (player.mo)
 		{
-			captured.Write( CLC_NetdemoCap(player, localcmds[gametic % MAXSAVETICS], ::messenger) );
+			captured.Write( CLC_NetdemoCap(player, localcmds[gametic % MAXSAVETICS], ::messenger), isMovie() );
 		}
 	}
 
@@ -1108,10 +1111,10 @@ void NetDemo::writeConnectionSequence()
 	}
 
 	// Server sends our player id and digest
-	captured.Write( SVC_ConsolePlayer(player, digest) );
+	captured.Write( SVC_ConsolePlayer(player, digest), isMovie());
 
 	// our userinfo
-	captured.Write( SVC_UserInfo(player, player.GameTime) );
+	captured.Write( SVC_UserInfo(player, player.GameTime), isMovie());
 
 	// Server sends its settings
 	cvar_t *var = GetFirstCvar();
@@ -1119,19 +1122,19 @@ void NetDemo::writeConnectionSequence()
 	{
 		if (var->flags() & CVAR_SERVERINFO)
 		{
-			captured.Write( SVC_ServerSettings(*var) );
+			captured.Write( SVC_ServerSettings(*var), isMovie() );
 		}
 		var = var->GetNext();
 	}
 
 	// Server tells everyone if we're a spectator
-	captured.Write( SVC_PlayerMembers(player, SVC_PM_SPECTATOR) );
+	captured.Write( SVC_PlayerMembers(player, SVC_PM_SPECTATOR), isMovie());
 
 	// Server sends wads & map name
-	captured.Write( SVC_LoadMap(wadfiles, patchfiles, level.mapname.c_str(), level.time) );
+	captured.Write( SVC_LoadMap(wadfiles, patchfiles, level.mapname.c_str(), level.time), isMovie());
 
 	// Server spawns the player
-	captured.Write( SVC_SpawnPlayer(player) );
+	captured.Write( SVC_SpawnPlayer(player), isMovie());
 }
 
 

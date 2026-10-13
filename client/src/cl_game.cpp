@@ -1034,6 +1034,12 @@ void G_Ticker (void)
 	if(netdemo.isPlaying())
 	{
 		netdemo.readMessages(&net_message);
+    if (movieDemo.isRecording())
+    {
+      movieDemo.capture(&net_message);
+      movieDemo.writeMessages();
+    }
+
 	}
 
 	netgraph.start(I_GetTime());

@@ -34,6 +34,7 @@
 #include "gi.h"
 #include "i_net.h"
 #include "i_system.h"
+#include "svc_message.h"
 #include "c_dispatch.h"
 #include "st_stuff.h"
 #include "m_argv.h"
@@ -148,6 +149,8 @@ std::string server_host = "";	// hostname of server
 
 // [SL] 2011-06-27 - Class to record and playback network recordings
 NetDemo netdemo;
+NetDemo movieDemo;
+
 // [SL] 2011-07-06 - not really connected (playing back a netdemo)
 bool forcenetdemosplit = false;		// need to split demo due to svc_reconnect
 
@@ -1313,10 +1316,18 @@ BEGIN_COMMAND(stopnetdemo)
 	{
 		netdemo.stopRecording();
 	}
-	else if (netdemo.isPlaying())
+	if (netdemo.isPlaying())
 	{
 		netdemo.stopPlaying();
 	}
+  if (movieDemo.isRecording())
+  {
+    movieDemo.stopRecording(true);
+  }
+  if (movieDemo.isPlaying())
+  {
+    movieDemo.stopPlaying();
+  }
 }
 END_COMMAND(stopnetdemo)
 
@@ -1617,6 +1628,26 @@ BEGIN_COMMAND(netseek)
 	}
 }
 END_COMMAND(netseek)
+
+BEGIN_COMMAND(movie)
+{
+	if (!netdemo.isPlaying())
+	{
+		PrintFmt(PRINT_HIGH, "Movie can only be made during netdemo playback ");
+		return;
+	}
+
+	std::string filename;
+	if (argc > 1 && strlen(argv[1]) > 0)
+		filename = CL_GenerateNetDemoFileName(argv[1]);
+	else
+		filename = CL_GenerateNetDemoFileName();
+
+	if (movieDemo.startRecording(filename, true))
+		movieDemo.writeMapChange();
+}
+END_COMMAND(movie)
+
 
 //
 // CL_MoveThing

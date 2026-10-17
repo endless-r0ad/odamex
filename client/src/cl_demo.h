@@ -19,14 +19,21 @@ public:
 	NetDemo(NetDemo&&) = default;
 	NetDemo& operator=(NetDemo&&) = default;
 
+	enum netdemo_t
+	{
+		CLIENT = 0x01,
+		MOVIE
+	};
+
 	bool startPlaying(const std::string& filename);
-	bool startRecording(const std::string& filename, bool isMovieRecording = false);
+	bool startRecording(const std::string& filename, netdemo_t demo_t);
 	bool stopPlaying();
-	bool stopRecording(bool isMovieRecording = false);
+	bool stopRecording(netdemo_t demo_t);
 	bool pause();
+	bool pauseRecording();
 	bool resume();
-	bool seekNetdemotic(int requestedNetdemotic);
-	bool seekGametic(int requestedGametic);
+	bool seekNetdemotic(int requestedNetdemotic, bool forMovieRecording = false);
+	bool seekGametic(int requestedGametic, bool forMovieRecording = false);
 
 	void writeMessages();
 	void readMessages(buf_t* netbuffer);
@@ -35,6 +42,11 @@ public:
 	void capturePacketHeader(const PacketHeaderType& header);
 	void writeMapChange();
 	void writeIntermission();
+	bool isWritingDelta = false;
+	bool writeAfterPause = false;
+
+	void addMovieCam(const player_t&);
+	void moveMovieCam(player_t& p);
 
 
 	[[nodiscard]] bool isRecording() const  { return (state == NetDemo::st_recording); }
@@ -46,6 +58,8 @@ public:
 
 	[[nodiscard]] int getNetdemotic() const { return netdemotic; }
 	[[nodiscard]] int getGametic() const    { return netdemotic + streamHeader.starting_gametic; }
+
+	[[nodiscard]] bool isMovie() const { return (streamHeader.netdemo_type == netdemo_t::MOVIE); }
 
 	void nextTic();
 	void prevTic();
@@ -78,14 +92,6 @@ private:
 		MSG_END_OF_NETDEMO,
 		MSG_HEADER,
 	};
-
-  enum netdemo_t
-	{
-		CLIENT = 0x01,
-		MOVIE
-	};
-
-  [[nodiscard]] bool isMovie() const    { return (streamHeader.netdemo_type == netdemo_t::MOVIE); }
 
 	struct message_header_t
 	{
@@ -130,7 +136,7 @@ private:
 	void writeSnapshotData(std::vector<byte>& buf);
 
 	void writeChunk(const byte *data, size_t size, netdemo_message_t type);
-	bool writeFileHeader(bool isMovieRecording = false);
+	bool writeFileHeader(netdemo_t demo_t);
 	bool readFileHeader();
 	static bool writeFormatDescription(std::fstream& io_stream);
 

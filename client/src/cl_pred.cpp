@@ -218,7 +218,7 @@ void CL_PredictRemotePlayers()
 void CL_PredictFreecam()
 {
 	player_t& player = displayplayer();
-	if (not player.isFreecam)
+	if (not player.isFreecam && player.id != 254)
 		return;
 
 	if (player.mo)
@@ -328,7 +328,7 @@ bool CL_PredictWorld()
 	// tenatively tell the netgraph that our prediction was successful
 	netgraph.setMisprediction(false);
 
-	if (consoleplayer_id != displayplayer_id && displayplayer().isFreecam)
+	if (consoleplayer_id != displayplayer_id && ( displayplayer().isFreecam || displayplayer_id == 254))
 		CL_PredictFreecam();
 
 	if (consoleplayer_id != displayplayer_id && not displayplayer().isFreecam)

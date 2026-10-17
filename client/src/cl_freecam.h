@@ -27,10 +27,25 @@
 #include "cl_main.h"
 
 inline constexpr byte freecamplayer_id = 255;
+inline constexpr byte moviecamplayer_id = 254;
 
 namespace Freecam
 {
+
+	struct save_pos_t
+	{
+		int tic;
+		fixed_t x;
+		fixed_t y;
+		fixed_t z;
+		fixed_t angle;
+	    fixed_t pitch;
+	};
+
 	extern std::string prevmap;
+    extern std::list<Freecam::save_pos_t> save_positions;
+    extern save_pos_t cur_delta;
+
 	void addFreecamPlayer();
 	void savePosition();
 	void reset();
@@ -41,4 +56,6 @@ namespace Freecam
 	void retireFor255thPlayer(player_t* cam);	
 	bool wipedOnLevelChange(player_t* cam);
 	void buildCam(player_t* p_cam);
+    void buildMovieCam(player_t* p_cam, fixed_t x, fixed_t y, fixed_t z, angle_t ang, fixed_t pit);
+    void setDeltas(int stop, save_pos_t pos, save_pos_t last_pos);
 };

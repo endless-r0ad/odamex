@@ -1034,11 +1034,36 @@ void G_Ticker (void)
 	if(netdemo.isPlaying())
 	{
 		netdemo.readMessages(&net_message);
-    if (movieDemo.isRecording())
-    {
-      movieDemo.capture(&net_message);
-      movieDemo.writeMessages();
-    }
+
+		if (movieDemo.isRecording())
+		{
+		  movieDemo.capture(&net_message);
+
+		  if (movieDemo.isWritingDelta)
+		  {
+			  const auto it = std::prev(Freecam::save_positions.end(), 2);
+
+			  player_t* moviecam = new player_t();
+			  moviecam->id = moviecamplayer_id;
+
+			  const int iteration = netdemo.getNetdemotic() - it->tic;
+
+			  const fixed_t x = it->x + Freecam::cur_delta.x * iteration;
+			  const fixed_t y = it->y + Freecam::cur_delta.y * iteration;
+			  const fixed_t z = it->z + Freecam::cur_delta.z * iteration;
+			  const angle_t angle = it->angle + Freecam::cur_delta.angle * iteration;
+			  const fixed_t pitch = it->pitch + Freecam::cur_delta.pitch * iteration;
+
+			  Freecam::buildMovieCam(moviecam, x, y, z, angle, pitch);
+			  movieDemo.moveMovieCam(*moviecam);
+
+			  if (Freecam::cur_delta.tic == netdemo.getNetdemotic())
+			  {
+				  movieDemo.pauseRecording();
+			  }
+			}
+		  movieDemo.writeMessages();
+		}
 
 	}
 

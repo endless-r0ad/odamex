@@ -109,7 +109,7 @@ void NetDemo::cleanUp()
 {
 	if (isRecording())
 	{
-		stopRecording();    // Try to write any unwritten data
+		stopRecording(isMovie() ? NetDemo::MOVIE : NetDemo::CLIENT);    // Try to write any unwritten data
 	}
 
 	// close all files
@@ -117,9 +117,12 @@ void NetDemo::cleanUp()
 
 	snapshot_index.clear();
 	map_index.clear();
+	Freecam::save_positions.clear();
 	state = oldstate = NetDemo::st_stopped;
 	netdemotic = pause_netdemotic = last_map_tic = 0;
 	timingdemo = false;
+	isWritingDelta = false;
+	writeAfterPause = false;
 }
 
 /**
@@ -158,14 +161,14 @@ void NetDemo::fatalError(const std::string &message)
 //   Assumes that demofp has been opened correctly elsewhere.  Does not close
 //   the file.
 
-bool NetDemo::writeFileHeader(bool movie)
+bool NetDemo::writeFileHeader(netdemo_t demo_t)
 {
 	memcpy(fileHeader.identifier.data(), "ODAD", 4);
 	fileHeader.version = NETDEMOVER;
 	streamHeader.compression        = 0;
 	streamHeader.snapshot_spacing   = NetDemo::SNAPSHOT_SPACING;
 	streamHeader.format_description = thisBuildDescription;
-  streamHeader.netdemo_type = movie ? netdemo_t::MOVIE : netdemo_t::CLIENT;
+	streamHeader.netdemo_type       = demo_t;
 
 	demofp.seekp(0, std::ios::beg);
 	const auto startingPosition = demofp.tellp();
@@ -379,7 +382,7 @@ void NetDemo::populateMessageIndexes()
 //   header is written which will be overwritten with the proper information
 //   in stopRecording().
 
-bool NetDemo::startRecording(const std::string &filename, bool isMovieRecording)
+bool NetDemo::startRecording(const std::string& filename, netdemo_t demo_t)
 {
 	this->filename = filename;
 
@@ -411,7 +414,7 @@ bool NetDemo::startRecording(const std::string &filename, bool isMovieRecording)
 
 	// Note: The header is not finalized at this point.  Write it anyway to
 	// reserve space in the output file for it and overwrite it later.
-	if (not writeFileHeader(isMovieRecording))
+	if (not writeFileHeader(demo_t))
 	{
 		error("Unable to write netdemo file header.");
 		return false;
@@ -561,6 +564,21 @@ bool NetDemo::pause()
 }
 
 
+
+bool NetDemo::pauseRecording()
+{
+	if (isRecording() and isMovie())
+	{
+		timingdemo = false;
+		oldstate = state;
+		state = NetDemo::st_paused;
+		isWritingDelta = false;
+		return true;
+	}
+
+	return false;
+}
+
 //
 // resume()
 //
@@ -585,7 +603,7 @@ bool NetDemo::resume()
 //   Writes the netdemo index to file and rewrites the netdemo file header before
 //   closing the netdemo file.
 
-bool NetDemo::stopRecording(bool isMovieRecording)
+bool NetDemo::stopRecording(netdemo_t demo_t)
 {
 	if (!isRecording())
 	{
@@ -606,7 +624,7 @@ bool NetDemo::stopRecording(bool isMovieRecording)
 	demofp.flush();
 
 	// rewrite the header for ending_gametic
-	if (not writeFileHeader(isMovieRecording))
+	if (not writeFileHeader(demo_t))
 	{
 		error("Unable to write updated netdemo file header.");
 		return false;
@@ -716,9 +734,19 @@ bool NetDemo::ticker()
 		netdemotic++;
 		if (netdemotic == pause_netdemotic)
 		{
-			pause_netdemotic = 0;
-			pause();
-			::paused = true;
+			if (movieDemo.isPaused() and movieDemo.writeAfterPause and Freecam::cur_delta.tic != 0)
+			{
+				pause_netdemotic = Freecam::cur_delta.tic;
+				movieDemo.state = st_recording;
+				movieDemo.isWritingDelta = true;
+				movieDemo.writeAfterPause = false;
+			}
+			else
+			{
+				pause_netdemotic = 0;
+				pause();
+				::paused = true;
+			}
 		}
 	}
 	return true;
@@ -742,7 +770,7 @@ void NetDemo::writeMessages()
 		writeChunk(snapbuf.data(), snapbuf.size(), NetDemo::MSG_SNAPSHOT);
 	}
 
-	if (connected)
+	if (connected and not isMovie())
 	{
 		// Record the local player's data
 		player_t& player = consoleplayer();
@@ -1417,7 +1445,7 @@ const std::vector<int> NetDemo::getMapChangeTimes() const
 	return times;
 }
 
-bool NetDemo::seekGametic(int requestedGametic)
+bool NetDemo::seekGametic(int requestedGametic, bool forMovieRecording)
 {
 	if (not isInPlayback()
 	    or std::cmp_less    (requestedGametic, streamHeader.starting_gametic)
@@ -1469,6 +1497,8 @@ bool NetDemo::seekGametic(int requestedGametic)
 		}
 		timingdemo = true;
 		pause_netdemotic = requestedGametic - streamHeader.starting_gametic;
+		if (forMovieRecording)
+			movieDemo.writeAfterPause = true;
 
 		return true;
 	}
@@ -1476,9 +1506,9 @@ bool NetDemo::seekGametic(int requestedGametic)
 	return false;
 }
 
-bool NetDemo::seekNetdemotic(int requestedNetdemotic)
+bool NetDemo::seekNetdemotic(int requestedNetdemotic, bool forMovieRecording)
 {
-	return seekGametic(requestedNetdemotic + streamHeader.starting_gametic);
+	return seekGametic(requestedNetdemotic + streamHeader.starting_gametic, forMovieRecording);
 }
 
 void NetDemo::writeMapChange()
@@ -1780,6 +1810,21 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 	// Make sure the message handling understands that the player is fully up-to-date.
 	// Especially important for rollback replication.
 	::hasReceivedFullUpdate = true;
+}
+
+
+void NetDemo::addMovieCam(const player_t& p)
+{
+	captured.Write(SVC_UserInfo(p, p.GameTime), isMovie());
+	captured.Write(SVC_PlayerMembers(p, SVC_PM_SPECTATOR), isMovie());
+	captured.Write(SVC_PlayerMembers(p, SVC_PM_CHEATS), isMovie());
+	captured.Write(SVC_SpawnPlayer(p), isMovie());
+	writeMessages();
+}
+
+void NetDemo::moveMovieCam(player_t& p)
+{
+	captured.Write(SVC_MovePlayer(p), isMovie());
 }
 
 VERSION_CONTROL (cl_demo_cpp, "$Id$")

@@ -431,7 +431,7 @@ void CL_QuitNetGame(const netQuitReason_e reason)
 	hasReceivedFullUpdate = false;
 
 	if (netdemo.isRecording())
-		netdemo.stopRecording();
+		netdemo.stopRecording(NetDemo::CLIENT);
 
 	if (netdemo.isInPlayback())
 		netdemo.stopPlaying();
@@ -1314,20 +1314,20 @@ BEGIN_COMMAND(stopnetdemo)
 {
 	if (netdemo.isRecording())
 	{
-		netdemo.stopRecording();
+		netdemo.stopRecording(NetDemo::CLIENT);
 	}
 	if (netdemo.isPlaying())
 	{
 		netdemo.stopPlaying();
 	}
-  if (movieDemo.isRecording())
-  {
-    movieDemo.stopRecording(true);
-  }
-  if (movieDemo.isPlaying())
-  {
-    movieDemo.stopPlaying();
-  }
+	if (movieDemo.isRecording())
+	{
+		movieDemo.stopRecording(NetDemo::MOVIE);
+	}
+	if (movieDemo.isPlaying())
+	{
+		movieDemo.stopPlaying();
+	}
 }
 END_COMMAND(stopnetdemo)
 
@@ -1352,7 +1352,7 @@ BEGIN_COMMAND(netrecord)
 	else
 		filename = CL_GenerateNetDemoFileName();
 
-	if (netdemo.startRecording(filename))
+	if (netdemo.startRecording(filename, NetDemo::CLIENT))
 		netdemo.writeMapChange();
 }
 END_COMMAND(netrecord)
@@ -1633,7 +1633,13 @@ BEGIN_COMMAND(movie)
 {
 	if (!netdemo.isPlaying())
 	{
-		PrintFmt(PRINT_HIGH, "Movie can only be made during netdemo playback ");
+		PrintFmt(PRINT_HIGH, "Movie can only be made during netdemo playback\n");
+		return;
+	}
+
+	if (players.size() >= MAXPLAYERS - 1)
+	{
+		PrintFmt(PRINT_HIGH, "Cannot create movie based on this netdemo, not enough player positions\n");
 		return;
 	}
 
@@ -1643,11 +1649,77 @@ BEGIN_COMMAND(movie)
 	else
 		filename = CL_GenerateNetDemoFileName();
 
-	if (movieDemo.startRecording(filename, true))
+	const player_t* fcam = &idplayer(freecamplayer_id);
+
+	player_t* moviecam = &players.emplace_back();
+	moviecam->id = moviecamplayer_id;
+
+	Freecam::buildMovieCam(moviecam, fcam->mo->x, fcam->mo->y, fcam->mo->z, fcam->mo->angle, fcam->mo->pitch);
+
+	if (movieDemo.startRecording(filename, NetDemo::MOVIE))
 		movieDemo.writeMapChange();
+
+	movieDemo.addMovieCam(*moviecam);
 }
 END_COMMAND(movie)
 
+BEGIN_COMMAND(movie_setpos)
+{
+	if (!movieDemo.isRecording() && !movieDemo.isPaused())
+	{
+		PrintFmt(PRINT_HIGH, "movie_setpos can only be used while movie is recording\n");
+		return;
+	}
+
+	if (!netdemo.isPaused())
+	{
+		PrintFmt(PRINT_HIGH, "pause the netdemo playback to use movie_setpos\n");
+		return;
+	}
+
+	const player_t* fcam = &idplayer(freecamplayer_id);
+	Freecam::save_pos_t pos;
+
+	pos.tic = netdemo.getNetdemotic();
+	pos.x = fcam->mo->x;
+	pos.y = fcam->mo->y;
+	pos.z = fcam->mo->z;
+	pos.angle = fcam->mo->angle;
+	pos.pitch = fcam->mo->pitch;
+
+	if (Freecam::save_positions.empty())
+	{
+		player_t* moviecam = &idplayer(moviecamplayer_id);
+
+		moviecam->mo->x = pos.x;
+		moviecam->mo->y = pos.y;
+		moviecam->mo->z = pos.z;
+		moviecam->mo->angle = pos.angle;
+		moviecam->mo->pitch = pos.pitch;
+
+		Freecam::save_positions.emplace_back(pos);
+		movieDemo.moveMovieCam(*moviecam);
+		movieDemo.writeMessages();
+		movieDemo.pauseRecording();
+	}
+	else
+	{
+		Freecam::save_pos_t last_pos = Freecam::save_positions.back();
+
+		if (netdemo.getNetdemotic() - last_pos.tic == 0)
+		{
+			PrintFmt(PRINT_HIGH, "Already set a position this tic ");
+			return;
+		}
+
+		Freecam::setDeltas(netdemo.getNetdemotic(), pos, last_pos);
+		Freecam::save_positions.emplace_back(pos);
+
+		movieDemo.pauseRecording();
+		netdemo.seekNetdemotic(last_pos.tic, true);
+	}
+}
+END_COMMAND(movie_setpos)
 
 //
 // CL_MoveThing
@@ -2669,7 +2741,7 @@ void CL_SimulatePlayers()
 				constexpr fixed_t EXCESSIVE_DISTANCE = 128 * FRACUNIT;
 				constexpr int     EXCESSIVE_TIME     = 10;
 
-				if (offset.MagnitudeIsGreaterThan(EXCESSIVE_DISTANCE))
+				if (offset.MagnitudeIsGreaterThan(EXCESSIVE_DISTANCE) and player.id != moviecamplayer_id)
 				{
 					int ticsAgo = 2;
 					while (ticsAgo <= EXCESSIVE_TIME)
@@ -2691,7 +2763,7 @@ void CL_SimulatePlayers()
 					}
 				}
 
-				if (snap.isContinuous() and offset.MagnitudeIsGreaterThan(2 * FRACUNIT))
+				if (snap.isContinuous() and offset.MagnitudeIsGreaterThan(2 * FRACUNIT) and player.id != moviecamplayer_id)
 				{
 					#ifdef _SNAPSHOT_DEBUG_
 					PrintFmt(PRINT_HIGH, "Snapshot {}, Correcting extrapolation error of {}\n",

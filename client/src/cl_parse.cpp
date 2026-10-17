@@ -980,7 +980,7 @@ void CL_LoadMap(const odaproto::svc::LoadMap* msg)
 	am_cheating = 0;
 
 	if (splitnetdemo)
-		netdemo.stopRecording();
+		netdemo.stopRecording(NetDemo::CLIENT);
 
 	size_t wadcount = msg->wadnames_size();
 	OWantFiles newwadfiles;
@@ -1103,11 +1103,11 @@ void CL_LoadMap(const odaproto::svc::LoadMap* msg)
 			// NOTE(jsd): Presumably a warning is already printed.
 			if (filename.empty())
 			{
-				netdemo.stopRecording();
+				netdemo.stopRecording(NetDemo::CLIENT);
 				return;
 			}
 
-			netdemo.startRecording(filename);
+			netdemo.startRecording(filename, NetDemo::CLIENT);
 		}
 	}
 

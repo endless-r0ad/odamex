@@ -33,6 +33,9 @@ fixed_t cam_pitch = 0;
 
 std::string Freecam::prevmap = "";
 
+std::list<Freecam::save_pos_t> Freecam::save_positions;
+Freecam::save_pos_t Freecam::cur_delta;
+
 void Freecam::addFreecamPlayer()
 {
 	player_t* cam = &idplayer(freecamplayer_id);
@@ -83,6 +86,32 @@ void Freecam::buildCam(player_t* p_cam)
 	p_cam->playerstate = PST_FREECAM;  
 
 	p_cam->isFreecam = true;
+}
+
+void Freecam::buildMovieCam(player_t* p_cam, fixed_t x, fixed_t y, fixed_t z, angle_t ang, fixed_t pit)
+{
+	AActor* mobj = new AActor(x, y, z, MT_PLAYER);
+	mobj->player = p_cam;
+	mobj->angle = ang;
+	mobj->pitch = pit;
+	mobj->prevx = mobj->x;
+	mobj->prevy = mobj->y;
+	mobj->prevz = mobj->z;
+	mobj->prevangle = mobj->angle;
+	mobj->prevpitch = mobj->pitch;
+	p_cam->camera = p_cam->mo = mobj->ptr();
+	p_cam->prevviewz = 1;
+	p_cam->viewz = 1;
+	p_cam->viewheight = VIEWHEIGHT;
+
+	// the moviecam is cheating player
+	p_cam->cheats |= CF_FLY;
+	p_cam->cheats |= CF_NOCLIP;
+	p_cam->spectator = false;
+	p_cam->mo->oflags |= MFO_SPECTATOR;
+	p_cam->mo->flags &= ~MF_SOLID;
+	p_cam->playerstate = PST_FREECAM;
+	p_cam->isFreecam = false;
 }
 
 void Freecam::setStartPosition(fixed_t x, fixed_t y, fixed_t z, angle_t angle)
@@ -141,4 +170,16 @@ void Freecam::retireFor255thPlayer(player_t* cam)
 	cam->prevviewz = 1;
 	cam->mo->Destroy();
 	cam->camera->Destroy();
+}
+
+void Freecam::setDeltas(int stop, save_pos_t cur_pos, save_pos_t last_pos)
+{
+	const int num_tics = stop - last_pos.tic;
+
+	cur_delta.tic = stop;
+	cur_delta.x = (cur_pos.x - last_pos.x) / num_tics;
+	cur_delta.y = (cur_pos.y - last_pos.y) / num_tics;
+	cur_delta.z = (cur_pos.z - last_pos.z) / num_tics;
+	cur_delta.angle = (cur_pos.angle - last_pos.angle) / num_tics;
+	cur_delta.pitch = (cur_pos.pitch - last_pos.pitch) / num_tics;
 }

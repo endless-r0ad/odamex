@@ -452,7 +452,7 @@ void P_CalcHeight (player_t& player)
 void P_PlayerLookUpDown (player_t& p)
 {
 	// [RH] Look up/down stuff
-	if (!sv_freelook && (!p.spectator))
+	if (not sv_freelook and not p.spectator and not p.id == moviecamplayer_id)
 	{
 		p.mo->pitch = 0;
 	}

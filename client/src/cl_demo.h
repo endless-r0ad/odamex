@@ -203,7 +203,7 @@ private:
 		uint32_t    starting_gametic    { 0 };      // the gametic the demo starts at
 		uint32_t    ending_gametic      { 0 };      // the last gametic of the demo
 		std::string format_description;
-    byte        netdemo_type        { 0 };
+		byte netdemo_type               { 0 };
 
 		bool Read(buf_t& io_buf);
 		bool Write(buf_t& io_buf) const;

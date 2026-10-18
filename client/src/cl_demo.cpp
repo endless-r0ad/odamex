@@ -1812,13 +1812,12 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 	::hasReceivedFullUpdate = true;
 }
 
-
 void NetDemo::addMovieCam(const player_t& p)
 {
 	captured.Write(SVC_UserInfo(p, p.GameTime), isMovie());
 	captured.Write(SVC_PlayerMembers(p, SVC_PM_SPECTATOR), isMovie());
 	captured.Write(SVC_SpawnPlayer(p), isMovie());
-  captured.Write(SVC_PlayerMembers(p, SVC_PM_CHEATS), isMovie());
+	captured.Write(SVC_PlayerMembers(p, SVC_PM_CHEATS), isMovie());
 	writeMessages();
 }
 

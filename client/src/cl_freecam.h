@@ -39,7 +39,7 @@ namespace Freecam
 		fixed_t y        {0};
 		fixed_t z        {0};
 		fixed_t angle    {0};
-	  fixed_t pitch    {0};
+    fixed_t pitch    {0};
 	};
 
 	extern std::string prevmap;

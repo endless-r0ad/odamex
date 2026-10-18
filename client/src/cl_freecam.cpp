@@ -107,8 +107,8 @@ void Freecam::buildMovieCam(player_t* p_cam, fixed_t x, fixed_t y, fixed_t z, an
 	// the moviecam is cheating player
 	p_cam->cheats |= CF_FLY;
 	p_cam->cheats |= CF_NOCLIP;
-  p_cam->cheats |= CF_GODMODE;
-  p_cam->cheats |= CF_NOTARGET;
+	p_cam->cheats |= CF_GODMODE;
+	p_cam->cheats |= CF_NOTARGET;
 	p_cam->spectator = true;
 	p_cam->mo->oflags |= MFO_SPECTATOR;
 	p_cam->mo->flags &= ~MF_SOLID;

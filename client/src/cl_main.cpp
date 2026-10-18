@@ -1316,15 +1316,15 @@ BEGIN_COMMAND(stopnetdemo)
 	{
 		netdemo.stopRecording(NetDemo::CLIENT);
 	}
-	if (netdemo.isPlaying())
-	{
-		netdemo.stopPlaying();
-	}
-	if (movieDemo.isRecording())
+  if (movieDemo.isRecording())
 	{
 		movieDemo.stopRecording(NetDemo::MOVIE);
 	}
-	if (movieDemo.isPlaying())
+	if (netdemo.isInPlayback())
+	{
+		netdemo.stopPlaying();
+	}
+	if (movieDemo.isInPlayback())
 	{
 		movieDemo.stopPlaying();
 	}

@@ -31,7 +31,7 @@ fixed_t cam_z = 0;
 angle_t cam_angle = 0;
 fixed_t cam_pitch = 0;
 
-std::string Freecam::prevmap = "";
+std::string Freecam::prevmap;
 
 std::list<Freecam::save_pos_t> Freecam::save_positions;
 Freecam::save_pos_t Freecam::cur_delta;
@@ -61,7 +61,7 @@ bool Freecam::wipedOnLevelChange(player_t* cam)
 
 void Freecam::buildCam(player_t* p_cam)
 {
-	AActor* mobj = new AActor(cam_x, cam_y, cam_z, MT_PLAYER);
+	auto* mobj = new AActor(cam_x, cam_y, cam_z, MT_PLAYER);
 	mobj->player = p_cam;
 	mobj->angle = cam_angle;
 	mobj->pitch = cam_pitch;
@@ -90,7 +90,7 @@ void Freecam::buildCam(player_t* p_cam)
 
 void Freecam::buildMovieCam(player_t* p_cam, fixed_t x, fixed_t y, fixed_t z, angle_t ang, fixed_t pit)
 {
-	AActor* mobj = new AActor(x, y, z, MT_PLAYER);
+	auto* mobj = new AActor(x, y, z, MT_PLAYER);
 	mobj->player = p_cam;
 	mobj->angle = ang;
 	mobj->pitch = pit;
@@ -107,7 +107,9 @@ void Freecam::buildMovieCam(player_t* p_cam, fixed_t x, fixed_t y, fixed_t z, an
 	// the moviecam is cheating player
 	p_cam->cheats |= CF_FLY;
 	p_cam->cheats |= CF_NOCLIP;
-	p_cam->spectator = false;
+  p_cam->cheats |= CF_GODMODE;
+  p_cam->cheats |= CF_NOTARGET;
+	p_cam->spectator = true;
 	p_cam->mo->oflags |= MFO_SPECTATOR;
 	p_cam->mo->flags &= ~MF_SOLID;
 	p_cam->playerstate = PST_FREECAM;

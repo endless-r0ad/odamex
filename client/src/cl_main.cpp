@@ -1631,7 +1631,7 @@ END_COMMAND(netseek)
 
 BEGIN_COMMAND(movie)
 {
-	if (!netdemo.isPlaying())
+	if (not netdemo.isInPlayback())
 	{
 		PrintFmt(PRINT_HIGH, "Movie can only be made during netdemo playback\n");
 		return;
@@ -1657,28 +1657,29 @@ BEGIN_COMMAND(movie)
 	Freecam::buildMovieCam(moviecam, fcam->mo->x, fcam->mo->y, fcam->mo->z, fcam->mo->angle, fcam->mo->pitch);
 
 	if (movieDemo.startRecording(filename, NetDemo::MOVIE))
+	{
 		movieDemo.writeMapChange();
-
-	movieDemo.addMovieCam(*moviecam);
+		movieDemo.addMovieCam(*moviecam);
+	}
 }
 END_COMMAND(movie)
 
 BEGIN_COMMAND(movie_setpos)
 {
-	if (!movieDemo.isRecording() && !movieDemo.isPaused())
+	if (not movieDemo.isRecording() and not movieDemo.isPaused())
 	{
 		PrintFmt(PRINT_HIGH, "movie_setpos can only be used while movie is recording\n");
 		return;
 	}
 
-	if (!netdemo.isPaused())
+	if (not netdemo.isPaused())
 	{
 		PrintFmt(PRINT_HIGH, "pause the netdemo playback to use movie_setpos\n");
 		return;
 	}
 
 	const player_t* fcam = &idplayer(freecamplayer_id);
-	Freecam::save_pos_t pos;
+	Freecam::save_pos_t pos{};
 
 	pos.tic = netdemo.getNetdemotic();
 	pos.x = fcam->mo->x;

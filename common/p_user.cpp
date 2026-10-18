@@ -452,7 +452,7 @@ void P_CalcHeight (player_t& player)
 void P_PlayerLookUpDown (player_t& p)
 {
 	// [RH] Look up/down stuff
-	if (not sv_freelook and not p.spectator and not p.id == moviecamplayer_id)
+	if (!sv_freelook && !p.spectator && p.id != 254)
 	{
 		p.mo->pitch = 0;
 	}
@@ -801,7 +801,7 @@ bool P_CanSpy(player_t &viewer, player_t &other, bool demo)
 		return true;
 
 	// You cannot view those without bodies or spectators.
-	if (!other.mo || other.spectator)
+	if (not other.mo || (other.spectator and not other.id == 254))
 		return false;
 
 	// Demo-watchers can view anybody.

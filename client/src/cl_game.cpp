@@ -1043,7 +1043,7 @@ void G_Ticker (void)
 		  {
 			  const auto it = std::prev(Freecam::save_positions.end(), 2);
 
-			  player_t* moviecam = new player_t();
+			  auto* moviecam = new player_t();
 			  moviecam->id = moviecamplayer_id;
 
 			  const int iteration = netdemo.getNetdemotic() - it->tic;

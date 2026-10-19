@@ -66,6 +66,8 @@ END_DISABLE_WARNING_GNU
 #include "g_deathspot.h"
 #include "g_gametype.h"
 #include "cl_freecam.h"
+#include "freecam.h"
+
 
 #define lioffset(x)		offsetof(level_pwad_info_t,x)
 #define cioffset(x)		offsetof(cluster_info_t,x)
@@ -721,6 +723,10 @@ void G_DoLoadLevel (int position)
 				Freecam::setStartPosition(INT2FIXED(start->x), INT2FIXED(start->y),
 				    level.flags & LEVEL_USEPLAYERSTARTZ ? INT2FIXED(start->z) : ONFLOORZ,
 				    MapThingToAngle(start->angle));
+        auto *fcam = new freecam_t(1, INT2FIXED(start->x), INT2FIXED(start->y),
+				    level.flags & LEVEL_USEPLAYERSTARTZ ? INT2FIXED(start->z) : ONFLOORZ,
+				    MapThingToAngle(start->angle), 0);
+        freecams.push_back(*fcam);
 			}
 		}
 

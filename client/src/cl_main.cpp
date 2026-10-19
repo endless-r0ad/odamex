@@ -71,6 +71,7 @@
 #include "cl_parse.h"
 #include "cl_replay.h"
 #include "cl_freecam.h"
+#include "freecam.h"
 
 #include "m_consolecommandstream.h"
 
@@ -424,6 +425,8 @@ void CL_QuitNetGame(const netQuitReason_e reason)
 
 		players.clear();
 	}
+
+	freecams.clear();
 
 	hasReceivedFullUpdate = false;
 
@@ -2065,6 +2068,7 @@ bool CL_PrepareConnect()
 bool CL_Connect()
 {
 	players.clear();
+  freecams.clear();
 
 	connected = true;
 	multiplayer = true;

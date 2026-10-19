@@ -572,7 +572,7 @@ void OInterpolation::disable()
 }
 
 //
-// The stuff below runs even if R_RenderPlayerView won't run.
+// The stuff below runs even if R_RenderView won't run.
 //
 
 //

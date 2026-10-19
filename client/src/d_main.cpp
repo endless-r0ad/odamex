@@ -91,6 +91,7 @@ END_DISABLE_WARNING_GNU
 #include "g_episode.h"
 #include "g_multikill.h"
 #include "g_spreedef.h"
+#include "freecam.h"
 
 extern size_t got_heapsize;
 
@@ -292,7 +293,11 @@ void D_Display()
 			V_DoPaletteEffects();
 
 			// Drawn to R_GetRenderingSurface()
-			R_RenderPlayerView(&displayplayer());
+      if (displayplayer_id != nullplayer_id)
+			  R_RenderView(&displayplayer().camera);
+      else
+        R_RenderView(&freecams.front().camera);
+
 			R_DrawViewBorder();
 			ST_Drawer();
 
@@ -389,6 +394,7 @@ void D_DoomLoop()
 			DThinker::DestroyAllThinkers();
 
 			::players.clear();
+      ::freecams.clear();
 
 			::gameaction = ga_fullconsole;
 			::gamestate = GS_FULLCONSOLE;
@@ -1147,6 +1153,7 @@ void D_DoomMain()
 		sv_allowredscreen = 1;
 
 		players.clear();
+    freecams.clear();
 		players.emplace_back();
 		players.back().playerstate = PST_REBORN;
 		consoleplayer_id = displayplayer_id = players.back().id = 1;

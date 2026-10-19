@@ -1658,8 +1658,8 @@ BEGIN_COMMAND(movie)
 
 	if (movieDemo.startRecording(filename, NetDemo::MOVIE))
 	{
+    movieDemo.addMovieCam(*moviecam);
 		movieDemo.writeMapChange();
-		movieDemo.addMovieCam(*moviecam);
 	}
 }
 END_COMMAND(movie)

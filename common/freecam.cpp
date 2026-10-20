@@ -26,7 +26,7 @@ freecam_t::freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fi
     : id(id), cam_x(x), cam_y(y), cam_z(z), cam_angle(angle), cam_pitch(pitch)
 {
 	cmd.clear();
-	auto* mobj = new AActor(x, y, z, MT_CAMERA);
+	AActor* mobj = new AActor(x, y, z, MT_CAMERA);
 	mobj->angle = angle;
 	mobj->pitch = pitch;
 	mobj->prevx = mobj->x;
@@ -38,6 +38,26 @@ freecam_t::freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fi
 	camera = mo = mobj->ptr();
 };
 
+bool freecam_t::wipedOnLevelChange()
+{
+  return (this->mo == nullptr and this->camera == nullptr);
+}
+
+bool freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
+{
+  AActor* mobj = new AActor(x, y, z, MT_CAMERA);
+	mobj->angle = angle;
+	mobj->pitch = pitch;
+	mobj->prevx = mobj->x;
+	mobj->prevy = mobj->y;
+	mobj->prevz = mobj->z;
+	mobj->prevangle = mobj->angle;
+	mobj->prevpitch = mobj->pitch;
+
+  this->camera = this->mo = mobj->ptr();
+
+}
+
 bool freecam_t::allowAdd()
 {
   if (clientside and not serverside)
@@ -45,4 +65,43 @@ bool freecam_t::allowAdd()
     return true;
   }
   return false; // there could be some use for freecams in a serverside netdemo?
+}
+
+freecam_t &freecam_t::idfreecam(byte id)
+{
+	for (auto& fcam : freecams)
+	{
+		if (fcam.id == id)
+			return fcam;
+	}
+
+	return nullcam;
+}
+
+void freecam_t::Serialize (FArchive &arc)
+{
+	if (arc.IsStoring ())
+	{ // saving to archive
+		arc << id
+			<< cmd
+			<< cam_x
+			<< cam_y
+			<< cam_z
+			<< cam_angle
+			<< cam_pitch;
+	}
+	else
+	{ // Restoring from archive
+		UserInfo dummyuserinfo;
+
+		arc >> id
+			>> cmd
+			>> cam_x
+			>> cam_y
+			>> cam_z
+			>> cam_angle
+			>> cam_pitch;
+
+		camera = mo;
+	}
 }

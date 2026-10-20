@@ -24,6 +24,9 @@
 #include "odamex.h"
 #include <list>
 
+inline constexpr byte nullcam_id = 0;
+inline constexpr byte freecam_id = 1; // general use, netdemos and survival
+inline byte displaycam_id = 1;
 
 class freecam_t
 {
@@ -43,8 +46,14 @@ class freecam_t
     angle_t cam_angle;
     fixed_t cam_pitch;
 
+    void Serialize (FArchive &arc);
+    bool wipedOnLevelChange();
+    bool rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
     static bool allowAdd();
+    static freecam_t &idfreecam(byte id);
 
 };
 
 inline std::list<freecam_t> freecams;
+inline static freecam_t nullcam(0, 0, 0, 0, 0, 0);
+

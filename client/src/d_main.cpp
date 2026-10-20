@@ -296,7 +296,7 @@ void D_Display()
       if (displayplayer_id != nullplayer_id)
 			  R_RenderView(&displayplayer().camera);
       else
-        R_RenderView(&freecams.front().camera);
+        R_RenderView(&freecam_t::idfreecam(freecam_id).camera);
 
 			R_DrawViewBorder();
 			ST_Drawer();

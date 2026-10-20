@@ -43,7 +43,7 @@ bool freecam_t::wipedOnLevelChange()
   return (this->mo == nullptr and this->camera == nullptr);
 }
 
-bool freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
+void freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
 {
   AActor* mobj = new AActor(x, y, z, MT_CAMERA);
 	mobj->angle = angle;

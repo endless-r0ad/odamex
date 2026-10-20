@@ -48,7 +48,7 @@ class freecam_t
 
     void Serialize (FArchive &arc);
     bool wipedOnLevelChange();
-    bool rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
+    void rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
     static bool allowAdd();
     static freecam_t &idfreecam(byte id);
 

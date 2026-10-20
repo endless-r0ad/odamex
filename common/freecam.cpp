@@ -21,12 +21,13 @@
 //-----------------------------------------------------------------------------
 
 #include "freecam.h"
+#include <p_local.h>
 
 freecam_t::freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
     : id(id), cam_x(x), cam_y(y), cam_z(z), cam_angle(angle), cam_pitch(pitch)
 {
 	cmd.clear();
-	AActor* mobj = new AActor(x, y, z, MT_CAMERA);
+	AActor* mobj = new AActor(x, y, z, MT_FREECAM);
 	mobj->angle = angle;
 	mobj->pitch = pitch;
 	mobj->prevx = mobj->x;
@@ -36,6 +37,22 @@ freecam_t::freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fi
 	mobj->prevpitch = mobj->pitch;
 
 	camera = mo = mobj->ptr();
+
+	/*uint32_t max_u32 = 4294967295;
+
+	P_SetThingId(mobj, max_u32 - freecams.size());
+
+	mobj->LinkToWorld();
+
+	if (mobj->subsector)
+	{
+		mobj->floorz = P_FloorHeight(mobj);
+		mobj->ceilingz = P_CeilingHeight(mobj);
+		mobj->dropoffz = mobj->floorz;
+		mobj->floorsector = mobj->subsector->sector;
+	}
+
+	P_SetMobjState(mobj, mobj->info->spawnstate);*/
 };
 
 bool freecam_t::wipedOnLevelChange()
@@ -45,7 +62,7 @@ bool freecam_t::wipedOnLevelChange()
 
 void freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
 {
-  AActor* mobj = new AActor(x, y, z, MT_CAMERA);
+	AActor* mobj = new AActor(x, y, z, MT_FREECAM);
 	mobj->angle = angle;
 	mobj->pitch = pitch;
 	mobj->prevx = mobj->x;
@@ -54,8 +71,23 @@ void freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t 
 	mobj->prevangle = mobj->angle;
 	mobj->prevpitch = mobj->pitch;
 
-  this->camera = this->mo = mobj->ptr();
+	this->camera = this->mo = mobj->ptr();
 
+	/*uint32_t max_u32 = 4294967295;
+
+	P_SetThingId(mobj, max_u32 - freecams.size());
+
+	mobj->LinkToWorld();
+
+	if (mobj->subsector)
+	{
+		mobj->floorz = P_FloorHeight(mobj);
+		mobj->ceilingz = P_CeilingHeight(mobj);
+		mobj->dropoffz = mobj->floorz;
+		mobj->floorsector = mobj->subsector->sector;
+	}
+
+	P_SetMobjState(mobj, mobj->info->spawnstate);*/
 }
 
 bool freecam_t::allowAdd()
@@ -67,7 +99,7 @@ bool freecam_t::allowAdd()
   return false; // there could be some use for freecams in a serverside netdemo?
 }
 
-freecam_t &freecam_t::idfreecam(byte id)
+freecam_t& freecam_t::idfreecam(byte id)
 {
 	for (auto& fcam : freecams)
 	{
@@ -75,7 +107,7 @@ freecam_t &freecam_t::idfreecam(byte id)
 			return fcam;
 	}
 
-	return nullcam;
+	return *new freecam_t(0, 0, 0, 0, 0, 0);
 }
 
 void freecam_t::Serialize (FArchive &arc)

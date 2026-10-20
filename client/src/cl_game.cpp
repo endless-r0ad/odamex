@@ -74,6 +74,7 @@ END_DISABLE_WARNING_GNU
 #include "g_multikill.h"
 #include "g_deathspot.h"
 #include "cl_freecam.h"
+#include "freecam.h"
 
 #include <math.h> // for pow()
 
@@ -1013,9 +1014,9 @@ void G_Ticker (void)
 		}
 	}
 	// Rude - allow controlling displayplayer if freecam
-	else if (displayplayer().isFreecam)
+	else if (displayplayer_id == nullplayer_id)
 	{
-		memcpy(&displayplayer().cmd, &consoleplayer().netcmds[buf], sizeof(ticcmd_t));
+		memcpy(&freecam_t::idfreecam(freecam_id).cmd, &consoleplayer().netcmds[buf], sizeof(ticcmd_t));
 
 		// Clear consoleplayer.cmd since they reapply every tic.
 		consoleplayer().cmd.clear();

@@ -47,6 +47,8 @@
 #include "g_multikill.h"
 #include "g_deathspot.h"
 
+#include "freecam.h"
+
 #include <span>
 
 #ifdef CLIENT_APP
@@ -495,6 +497,96 @@ CVAR_FUNC_IMPL (sv_aircontrol)
 //
 // P_MovePlayer
 //
+void P_MoveFreecam (freecam_t& freecam)
+{
+	if (!freecam.mo)
+		return;
+
+	AActor *mo = freecam.mo;
+
+	//mo->onground = (mo->z <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ);
+
+	// Move around.
+	// Reactiontime is used to prevent movement
+	//	for a bit after a teleport.
+	if (freecam.mo->reactiontime)
+	{
+		freecam.mo->reactiontime--;
+		return;
+	}
+
+	if (freecam.cmd.upmove != 0)
+	{
+		freecam.mo->momz = freecam.cmd.upmove << 9;
+	}
+
+	// Look left/right
+	mo->angle += freecam.cmd.yaw << 16;
+
+	// Look up/down stuff
+	const int look = freecam.cmd.pitch << 16;
+
+	if (look)
+	{
+		if (look == INT_MIN)
+		{ // center view
+			freecam.mo->pitch = 0;
+		}
+		else if (look > 0)
+		{ // look up
+			freecam.mo->pitch -= look;
+			if (freecam.mo->pitch < -ANG(32))
+				freecam.mo->pitch = -ANG(32);
+		}
+		else
+		{ // look down
+			freecam.mo->pitch -= look;
+			if (freecam.mo->pitch > ANG(56))
+				freecam.mo->pitch = ANG(56);
+		}
+	}
+
+	if (freecam.cmd.forwardmove | freecam.cmd.sidemove)
+	{
+		int friction;
+
+		int movefactor = P_GetMoveFactor (mo, &friction);
+		int bobfactor = friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
+		
+		fixed_t forwardmove = (freecam.cmd.forwardmove * movefactor) >> 8;
+		const fixed_t sidemove = (freecam.cmd.sidemove * movefactor) >> 8;
+
+		if (forwardmove)
+		{
+			mo->angle >>= ANGLETOFINESHIFT;
+
+			if (mo->pitch != 0)
+			{
+				angle_t pitch = static_cast<angle_t>(mo->pitch) >> ANGLETOFINESHIFT;
+				fixed_t zpush = FixedMul(forwardmove, finesine[pitch]);
+				if (mo->waterlevel && mo->waterlevel < 2 && zpush < 0)
+					zpush = 0;
+
+				mo->momz -= zpush;
+				forwardmove = FixedMul(forwardmove, finecosine[pitch]);
+			}
+			mo->momx += FixedMul(forwardmove, finecosine[mo->angle]);
+			mo->momy += FixedMul(forwardmove, finesine[mo->angle]);
+		}
+		if (sidemove)
+		{
+			fixed_t ang = (mo->angle - ANG90) >> ANGLETOFINESHIFT;
+
+			freecam.mo->momx += FixedMul(sidemove, finecosine[ang]);
+			freecam.mo->momy += FixedMul(sidemove, finesine[ang]);
+		}
+	}
+}
+
+
+//
+// P_MovePlayer
+//
 void P_MovePlayer (player_t& player)
 {
 	if (!player.mo || player.playerstate == PST_DEAD)
@@ -580,7 +672,7 @@ void P_MovePlayer (player_t& player)
 
 		// [ML] Check for these conditions unless advanced physics is on
 		if(co_zdoomphys ||
-			(!co_zdoomphys && (mo->onground || (mo->flags2 & MF2_FLY) || mo->waterlevel)))
+		    (!co_zdoomphys && (mo->onground || (mo->flags2 & MF2_FLY) || mo->waterlevel)))
 		{
 			if (forwardmove)
 			{
@@ -624,12 +716,12 @@ void P_MovePlayer (player_t& player)
 			const bool springpad = player.mo->floorsector->flags & SECF_SPRINGPAD;
 			player.mo->momz += springpad ? 4*FRACUNIT : 8*FRACUNIT;
 
-//			[SL] No jumping sound...
-//			if(!player.spectator)
+			//			[SL] No jumping sound...
+			//			if(!player.spectator)
 //				UV_SoundAvoidPlayer(player.mo, CHAN_VOICE, "player/male/jump1", ATTN_NORM);
 
-            player.mo->flags2 &= ~MF2_ONMOBJ;
-            player.jumpTics = springpad ? 0 : 18;
+			player.mo->flags2 &= ~MF2_ONMOBJ;
+			player.jumpTics = springpad ? 0 : 18;
 		}
 	}
 }
@@ -948,6 +1040,29 @@ void P_SetPlayerPowerupStatuses(player_t& player, std::span<const int, NUMPOWERS
 
 	P_SetPlayerInvulnBleed(player, powers);
 }
+
+//
+// P_FreecamThink
+//
+void P_FreecamThink(freecam_t& freecam)
+{
+	freecam.mo->prevangle = freecam.mo->angle;
+	freecam.mo->prevpitch = freecam.mo->pitch;
+
+	P_MoveFreecam(freecam);
+	//P_CalcFreecamHeight(freecam);
+
+	// A special event has no other buttons.
+	if (freecam.cmd.buttons & BT_SPECIAL)
+		freecam.cmd.buttons = 0;
+
+	// check for use
+	if (freecam.cmd.buttons & BT_USE)
+	{
+		// send movie_setpos if recording movie demo
+	}
+}
+
 
 //
 // P_PlayerThink

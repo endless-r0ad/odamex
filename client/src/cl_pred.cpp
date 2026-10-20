@@ -32,6 +32,7 @@
 #include "clc_message.h"
 
 #include "p_snapshot.h"
+#include "freecam.h"
 
 EXTERN_CVAR (cl_prednudge)
 EXTERN_CVAR (cl_predictsectors)
@@ -170,7 +171,7 @@ void CL_PredictSectors(int predtic)
 void CL_PredictSpying()
 {
 	player_t& player = displayplayer();
-	if (consoleplayer_id == displayplayer_id)
+	if (consoleplayer_id == displayplayer_id || displayplayer_id == nullplayer_id)
 		return;
 
 	// Save and restore the prevangle and prevpitch so that the client viewangle interpolation
@@ -218,7 +219,8 @@ void CL_PredictRemotePlayers()
 void CL_PredictFreecam()
 {
 	player_t& player = displayplayer();
-	if (not player.isFreecam)
+	freecam_t& freecam = freecam_t::idfreecam(freecam_id);
+	if (not player.isFreecam && freecam.id != freecam_id)
 		return;
 
 	if (player.mo)
@@ -231,6 +233,7 @@ void CL_PredictFreecam()
 	predicting = true;
 
 	P_PlayerThink(player);
+	P_FreecamThink(freecam);
 
 	predicting = false;
 }
@@ -328,7 +331,7 @@ bool CL_PredictWorld()
 	// tenatively tell the netgraph that our prediction was successful
 	netgraph.setMisprediction(false);
 
-	if (consoleplayer_id != displayplayer_id && displayplayer().isFreecam)
+	if ((consoleplayer_id != displayplayer_id && displayplayer().isFreecam) || displayplayer_id == nullplayer_id)
 		CL_PredictFreecam();
 
 	if (consoleplayer_id != displayplayer_id && not displayplayer().isFreecam)

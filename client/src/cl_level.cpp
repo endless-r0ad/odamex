@@ -522,6 +522,13 @@ void G_DoCompleted (void)
 	WI_Start (&wminfo);
 }
 
+
+bool FreecamAllowedOnLevel()
+{
+	return (netdemo.isPlaying() or (G_IsLivesGame() and not G_IsTeamGame()));
+}
+
+
 //
 // G_DoLoadLevel
 //
@@ -712,28 +719,28 @@ void G_DoLoadLevel (int position)
 	G_UnSnapshotLevel (!savegamerestore);	// [RH] Restore the state of the level.
 
 	// clientside only freecam, added after demo players are added in G_UnSnapshotLevel
-	if (netdemo.isPlaying() or G_IsLivesGame())
+	if (FreecamAllowedOnLevel())
 	{
-		freecam_t fcam = freecam_t::idfreecam(freecam_id);
+		freecam_t &freecam = freecam_t::idfreecam(freecam_id);
 		const std::optional<mapthing2_t> start = P_GetFirstAvailableSpawn();
 
-		if (fcam.id == nullcam_id && start.has_value())
+		if (freecam.id == nullcam_id && start.has_value())
 		{
 			Freecam::setStartPosition(
 			    INT2FIXED(start->x), INT2FIXED(start->y),
 			    level.flags & LEVEL_USEPLAYERSTARTZ ? INT2FIXED(start->z) : ONFLOORZ,
 			    MapThingToAngle(start->angle));
 
-			auto* fcam = new freecam_t(
-			    freecamplayer_id, INT2FIXED(start->x), INT2FIXED(start->y),
+			auto* freecam = new freecam_t(
+			    freecam_id, INT2FIXED(start->x), INT2FIXED(start->y),
 			    level.flags & LEVEL_USEPLAYERSTARTZ ? INT2FIXED(start->z) : ONFLOORZ,
 			    MapThingToAngle(start->angle), 0);
-			freecams.push_back(*fcam);
+			freecams.push_back(*freecam);
 		}
 
-		if (fcam.wipedOnLevelChange())
+		if (freecam.wipedOnLevelChange())
 		{
-			fcam.rebuild(INT2FIXED(start->x), INT2FIXED(start->y),
+			freecam.rebuild(INT2FIXED(start->x), INT2FIXED(start->y),
 			             level.flags & LEVEL_USEPLAYERSTARTZ ? INT2FIXED(start->z)
 			                                                 : ONFLOORZ,
 			             MapThingToAngle(start->angle), 0);

@@ -1031,6 +1031,18 @@ mobjinfo_t odamobjinfo[] = {
 		.flags            = MF_SPECIAL,
 		.name             = "MT_RESTEAMMATE",
 	},
+    {                // MT_FREECAM
+		.type             = MT_FREECAM,
+        .spawnstate       = S_RES,
+        .spawnhealth      = 1000,
+        .reactiontime     = 8,
+        .radius           = 20_fx,
+        .height           = 16_fx,
+        .cdheight         = 16_fx,
+        .mass             = 100,
+        .flags            = MF_FLOAT,
+        .name             = "MT_FREECAM",
+    },
 
 	// ----------- odamex mobjinfo end -----------
 };

@@ -50,10 +50,8 @@ class freecam_t
     bool wipedOnLevelChange();
     void rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
     static bool allowAdd();
-    static freecam_t &idfreecam(byte id);
+    static freecam_t& idfreecam(byte id);
 
 };
 
 inline std::list<freecam_t> freecams;
-inline static freecam_t nullcam(0, 0, 0, 0, 0, 0);
-

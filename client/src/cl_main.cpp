@@ -650,18 +650,14 @@ void CL_CheckDisplayPlayer(void)
 	if (!P_CanSpy(consoleplayer(), displayplayer(), demoplayback || netdemo.isInPlayback()))
 		newid = consoleplayer_id;
 
-	if (displayplayer().spectator && not displayplayer().isFreecam)
+	if (displayplayer().spectator)
 		newid = consoleplayer_id;
 
 	if (newid)
 	{
 		// Request information about this player from the server
 		// (weapons, ammo, health, etc)
-		// server doesnt know about clientside freecam, dont tell it
-		if (not displayplayer().isFreecam && newid != freecamplayer_id)
-		{
-			messenger.Reliable().Write(CLC_Spy(newid));
-		}
+		messenger.Reliable().Write(CLC_Spy(newid));
 		displayplayer_id = newid;
 
 		// We have no idea where the new view target's weapon is sitting until the

@@ -51,9 +51,6 @@
 
 #include <span>
 
-#ifdef CLIENT_APP
-#include "cl_freecam.h"
-#endif
 //
 // Movement.
 //
@@ -878,12 +875,6 @@ bool P_AreTeammates(const player_t &a, const player_t &b)
 
 bool P_CanSpy(player_t &viewer, player_t &other, bool demo)
 {
-	// server doesnt know or care about the freecam
-	#ifdef CLIENT_APP
-	if (other.isFreecam && Freecam::allowSpy())
-		return true;
-	#endif
-
 	// skip if out of lives in survival
 	if (G_IsLivesGame() && other.lives < 1)
 		return false;
@@ -1051,6 +1042,16 @@ void P_FreecamThink(freecam_t& freecam)
 
 	P_MoveFreecam(freecam);
 	//P_CalcFreecamHeight(freecam);
+
+	freecam.camera->z = freecam.mo->z;
+
+	if (freecam.camera->z > freecam.mo->ceilingz-4*FRACUNIT)
+		freecam.camera->z = freecam.mo->ceilingz-4*FRACUNIT;
+	if (freecam.camera->z < freecam.mo->floorz + 4*FRACUNIT)
+		freecam.camera->z = freecam.mo->floorz + 4*FRACUNIT;
+
+	//if (freecam.camera->prevz == 1) // don't interp first frame
+	//	player.prevviewz = player.viewz;
 
 	// A special event has no other buttons.
 	if (freecam.cmd.buttons & BT_SPECIAL)

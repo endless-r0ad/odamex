@@ -719,7 +719,7 @@ void G_AddViewPitch(int pitch)
 		pitch = -pitch;
 
 	if ((Actions[ACTION_MLOOK]) || (cl_mouselook && sv_freelook) ||
-	    consoleplayer().spectator || displayplayer().isFreecam)
+	    consoleplayer().spectator || freecamIsActive())
 	{
 		localview.pitch += pitch << 16;
 		localview.setpitch = true;
@@ -729,7 +729,7 @@ void G_AddViewPitch(int pitch)
 bool G_ShouldIgnoreMouseInput()
 {
 	if ((consoleplayer().id != displayplayer().id || consoleplayer().playerstate == PST_DEAD) &&
-		not displayplayer().isFreecam)
+		not freecamIsActive())
 		return true;
 
 	return false;
@@ -874,7 +874,7 @@ void P_CheckInterpPause()
 {
 	// Game pauses when in the menu and not online/demo
 	OInterpolation &oi = OInterpolation::getInstance();
-	if ((paused && not displayplayer().isFreecam) || (!multiplayer && !demoplayback &&
+	if ((paused && not freecamIsActive()) || (!multiplayer && !demoplayback &&
 		(menuactive || ConsoleState == c_down || ConsoleState == c_falling)))
 	{
 		if (oi.enabled())
@@ -995,7 +995,7 @@ void G_Ticker (void)
 
 	// The freecam is only valid while dead and out of lives (or in a netdemo)
 	// Nothing checks the inverse, so check it here and reset the view when we hit it.
-	if (displayplayer().isFreecam && not netdemo.isInPlayback() && not demoplayback &&
+	if (freecamIsActive() && not netdemo.isInPlayback() && not demoplayback &&
 	    not Freecam::allowSpy())
 	{
 		displayplayer_id = consoleplayer_id;
@@ -1014,7 +1014,7 @@ void G_Ticker (void)
 		}
 	}
 	// Rude - allow controlling displayplayer if freecam
-	else if (displayplayer_id == nullplayer_id)
+	else if (freecamIsActive())
 	{
 		memcpy(&freecam_t::idfreecam(freecam_id).cmd, &consoleplayer().netcmds[buf], sizeof(ticcmd_t));
 

@@ -1040,7 +1040,7 @@ mobjinfo_t odamobjinfo[] = {
         .height           = 16_fx,
         .cdheight         = 16_fx,
         .mass             = 100,
-        .flags            = MF_FLOAT,
+        .flags            = MF_NOCLIP,
         .name             = "MT_FREECAM",
     },
 

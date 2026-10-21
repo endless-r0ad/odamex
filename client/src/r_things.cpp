@@ -578,7 +578,7 @@ void R_ProjectSprite(AActor *thing, int fakeside)
 
 	if (projlerp &&
 	    P_AproxDistance2(thing, thing->prevx, thing->prevy) < 128*FRACUNIT &&
-	    not (paused && displayplayer().isFreecam))
+	    not (paused && freecamIsActive()))
 	{
 		// the actor probably did not teleport
 		// interpolate between previous and current position
@@ -925,9 +925,7 @@ void R_DrawPSprite(const pspdef_t& psp, ActorFlags1 flags)
 	}
 
 	// Don't display the weapon sprite if using spectating without spynext
-	// or using freecam
-	if ((consoleplayer().spectator && displayplayer_id == consoleplayer_id) ||
-		displayplayer().isFreecam)
+	if (consoleplayer().spectator && displayplayer_id == consoleplayer_id)
 		return;
 
 	R_DrawVisSprite (vis, vis->x1, vis->x2);

@@ -1735,8 +1735,7 @@ void MultiKillHud()
 	if (!validplayer(displayplayer()) ||
     !cl_showmultikills ||
     (!cl_showofflinemultikills && !network_game) ||
-    (!sv_showmultikills && network_game) ||
-    displayplayer().isFreecam)
+    (!sv_showmultikills && network_game))
 	{
 		return;
 	}
@@ -1801,7 +1800,7 @@ void LevelStateHUD()
 	switch (::levelstate.getState())
 	{
 	case LevelState::WARMUP: {
-		if (consoleplayer().spectator || displayplayer().isFreecam)
+		if (consoleplayer().spectator || freecamIsActive())
 		{
 			break;
 		}

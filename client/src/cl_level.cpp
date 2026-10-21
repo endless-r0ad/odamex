@@ -685,7 +685,7 @@ void G_DoLoadLevel (int position)
 		}
 	}
 
-	if (not displayplayer().isFreecam)
+	if (not freecamIsActive())
 	{
 		// view the guy you are playing..
 		// unless level load is from a netdemo snapshot and display is freecam

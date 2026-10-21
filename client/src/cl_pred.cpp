@@ -218,24 +218,20 @@ void CL_PredictRemotePlayers()
 //
 void CL_PredictFreecam()
 {
-	player_t& player = displayplayer();
-	freecam_t& freecam = freecam_t::idfreecam(freecam_id);
-	if (not player.isFreecam && freecam.id != freecam_id)
+	freecam_t& freecam = freecam_t::idfreecam(displaycam_id);
+
+	if (not freecamIsActive())
 		return;
 
-	if (player.mo)
+	if (freecam.mo)
 	{
-		player.mo->prevx = player.mo->x;
-		player.mo->prevy = player.mo->y;
-		player.mo->prevz = player.mo->z;
+		freecam.mo->prevx = freecam.mo->x;
+		freecam.mo->prevy = freecam.mo->y;
+		freecam.mo->prevz = freecam.mo->z;
 	}
 
-	predicting = true;
-
-	P_PlayerThink(player);
 	P_FreecamThink(freecam);
 
-	predicting = false;
 }
 
 //
@@ -317,7 +313,7 @@ bool CL_PredictWorld()
 	if (gamestate != GS_LEVEL)
 		return false;
 
-	if (netdemo.isPaused() && displayplayer().isFreecam)
+	if (netdemo.isPaused() && freecamIsActive())
 	{
 		CL_PredictFreecam();
 		return false;
@@ -331,10 +327,10 @@ bool CL_PredictWorld()
 	// tenatively tell the netgraph that our prediction was successful
 	netgraph.setMisprediction(false);
 
-	if ((consoleplayer_id != displayplayer_id && displayplayer().isFreecam) || displayplayer_id == nullplayer_id)
+	if (freecamIsActive())
 		CL_PredictFreecam();
 
-	if (consoleplayer_id != displayplayer_id && not displayplayer().isFreecam)
+	if (not freecamIsActive() and consoleplayer_id != displayplayer_id)
 		CL_PredictSpying();
 
 	CL_PredictRemotePlayers();

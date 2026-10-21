@@ -1688,7 +1688,7 @@ void AM_drawPlayers()
 	fixed64_t y;
 	fixed_t cangle;
 
-	if (oi.enabled())
+	if (oi.enabled() and validplayer(conplayer))
 	{
 		x = FIXED2FIXED64(
 			conplayer.camera->prevx +
@@ -1701,7 +1701,7 @@ void AM_drawPlayers()
 		cangle = conplayer.camera->prevangle +
 			FixedMul(conplayer.camera->angle - conplayer.camera->prevangle, render_lerp_amount);
 	}
-	else
+	else if (validplayer(conplayer))
 	{
 		x = FIXED2FIXED64(conplayer.camera->x);
 		y = FIXED2FIXED64(conplayer.camera->y);
@@ -2501,6 +2501,7 @@ void AM_Drawer()
 
 	AM_drawWalls();
 	AM_drawPlayers();
+  //AM_drawFreecams();   todo
 	if (G_IsHordeMode() || G_GetCurrentSkill().easy_key || (am_cheating == 2))
 		AM_drawThings();
 

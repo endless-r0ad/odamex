@@ -1098,8 +1098,7 @@ void R_SetSkyForegroundDrawFuncs()
 //
 void R_RenderView(AActor::AActorPtr *cam)
 {
-  auto* c = cam->get();
-  
+
 	// Recalculate the viewing window dimensions, if needed.
 	if (setsizeneeded)
 	{
@@ -1108,8 +1107,7 @@ void R_RenderView(AActor::AActorPtr *cam)
 		setsizeneeded = false;
 	}
 
-  if (c->player)
-	  OInterpolation::getInstance().interpolateView(c->player, render_lerp_amount);
+  OInterpolation::getInstance().interpolateView(cam, render_lerp_amount);
 
 	if (!viewactive)
 		return;

@@ -542,12 +542,14 @@ void OInterpolation::interpolateCamera(fixed_t amount, bool use_localview,
 	}
 }
 
-void OInterpolation::interpolateView(player_t* player, fixed_t amount)
+void OInterpolation::interpolateView(AActor::AActorPtr* cam, fixed_t amount)
 {
-	camera = player->camera; // [RH] Use camera instead of viewplayer
+	camera = cam->get(); // [RH] Use camera instead of viewplayer
 
 	if (!camera || !camera->subsector)
 		return;
+
+	bool chase = (camera->player and camera->player->cheats & CF_CHASECAM);
 
 	player_t& consolePlayer = consoleplayer();
 	const bool use_localview = consolePlayer.id == displayplayer().id &&
@@ -555,7 +557,7 @@ void OInterpolation::interpolateView(player_t* player, fixed_t amount)
 	                           not consolePlayer.mo->reactiontime &&
 	                           not netdemo.isInPlayback() && not demoplayback;
 
-	interpolateCamera(amount, use_localview, player->cheats & CF_CHASECAM);
+	interpolateCamera(amount, use_localview, chase);
 }
 
 //

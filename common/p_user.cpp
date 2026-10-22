@@ -555,7 +555,7 @@ void P_MoveFreecam (freecam_t& freecam)
 
 		if (forwardmove)
 		{
-			mo->angle >>= ANGLETOFINESHIFT;
+			angle_t ang = mo->angle >> ANGLETOFINESHIFT;
 
 			if (mo->pitch != 0)
 			{
@@ -567,8 +567,8 @@ void P_MoveFreecam (freecam_t& freecam)
 				mo->momz -= zpush;
 				forwardmove = FixedMul(forwardmove, finecosine[pitch]);
 			}
-			mo->momx += FixedMul(forwardmove, finecosine[mo->angle]);
-			mo->momy += FixedMul(forwardmove, finesine[mo->angle]);
+			mo->momx += FixedMul(forwardmove, finecosine[ang]);
+			mo->momy += FixedMul(forwardmove, finesine[ang]);
 		}
 		if (sidemove)
 		{

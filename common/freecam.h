@@ -25,7 +25,10 @@
 #include <list>
 
 inline constexpr byte nullcam_id = 0;
-inline byte freecam_id = 1;
+inline constexpr byte firstcam_id = 1;
+
+// the freecam currently being displayed and controlled
+inline byte freecam_id = 0;
 
 class freecam_t
 {

@@ -58,6 +58,7 @@
 #include "PspriteStateType.h"
 
 #include "p_horde.h"
+#include "freecam.h"
 
 struct client_t
 {
@@ -636,7 +637,7 @@ inline constexpr byte menuplayer_id = 0; // fake player id used by translations 
 
 inline bool freecamIsActive()
 {
-  return displayplayer_id == nullplayer_id;
+  return (displayplayer_id == nullplayer_id and freecam_id != nullcam_id);
 }
 
 //

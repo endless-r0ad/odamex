@@ -218,7 +218,7 @@ void CL_PredictRemotePlayers()
 //
 void CL_PredictFreecam()
 {
-	freecam_t& freecam = freecam_t::idfreecam(displaycam_id);
+	freecam_t& freecam = freecam_t::idfreecam(freecam_id);
 
 	if (not freecamIsActive())
 		return;

@@ -54,7 +54,7 @@ void P_Ticker (bool runAllThinkers)
 #ifdef CLIENT_APP
 	if (paused && freecamIsActive())
 	{
-		freecam_t::idfreecam(displaycam_id).mo->RunThink();
+		freecam_t::idfreecam(freecam_id).mo->RunThink();
 	}
 
 	// Game pauses when in the menu and not online/demo

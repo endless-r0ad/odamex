@@ -25,8 +25,7 @@
 #include <list>
 
 inline constexpr byte nullcam_id = 0;
-inline constexpr byte freecam_id = 1; // general use, netdemos and survival
-inline byte displaycam_id = 1;
+inline byte freecam_id = 1;
 
 class freecam_t
 {
@@ -49,7 +48,6 @@ class freecam_t
     void Serialize (FArchive &arc);
     bool wipedOnLevelChange();
     void rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
-    static bool allowAdd();
     static freecam_t& idfreecam(byte id);
 
 };

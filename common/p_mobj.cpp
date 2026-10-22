@@ -2454,6 +2454,9 @@ void P_ZMovement(AActor *mo)
 	if (mo->player)
 		P_PlayerFlyBob(mo);
 
+	if (mo->type == MT_FREECAM)
+		mo->momz = FixedMul(mo->momz, FRICTION_FLY);
+
 	// apply friction in the z-direction in water
 	if (mo->waterlevel && !(mo->flags & MF_NOGRAVITY))
 		mo->momz = FixedMul(mo->momz, mo->subsector->sector->friction);

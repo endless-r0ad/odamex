@@ -90,15 +90,6 @@ void freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t 
 	P_SetMobjState(mobj, mobj->info->spawnstate);*/
 }
 
-bool freecam_t::allowAdd()
-{
-  if (clientside and not serverside)
-  {
-    return true;
-  }
-  return false; // there could be some use for freecams in a serverside netdemo?
-}
-
 freecam_t& freecam_t::idfreecam(byte id)
 {
 	for (auto& fcam : freecams)

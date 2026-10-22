@@ -547,7 +547,7 @@ void HU_Drawer()
 			{
 				if (spechud)
 					hud::SpectatorHUD();
-				else if (displayplayer_id == nullplayer_id)
+				else if (freecamIsActive())
 					hud::FreecamHUD();
 				else
 					hud::OdamexHUD();
@@ -592,7 +592,7 @@ void HU_Drawer()
 	if (gamestate == GS_LEVEL)
 		HU_DrawCrosshair();
 
-	if (consoleplayer().camera && !(demoplayback))
+	if (consoleplayer().camera and not demoplayback and not freecamIsActive())
 	{
 		if ((gamestate != GS_INTERMISSION && Actions[ACTION_SHOWSCORES]) ||
 		    (::multiplayer && hud_show_scoreboard_ondeath &&

@@ -1385,7 +1385,7 @@ bool R_BorderVisible()
 //
 bool R_StatusBarVisible()
 {
-	return (setblocks <= 10 || AM_ClassicAutomapVisible()) && !displayplayer().spectator;
+	return (setblocks <= 10 or AM_ClassicAutomapVisible()) and not (displayplayer().spectator or freecamIsActive());
 }
 
 //

@@ -30,6 +30,18 @@ inline constexpr byte firstcam_id = 1;
 // the freecam currently being displayed and controlled
 inline byte freecam_id = 0;
 
+struct save_pos_t
+{
+	int tic          {0};
+	fixed_t x        {0};
+	fixed_t y        {0};
+	fixed_t z        {0};
+	fixed_t angle    {0};
+	fixed_t pitch    {0};
+
+  void clear() { tic = x = y = z = angle = pitch = 0; }
+};
+
 class freecam_t
 {
   public:
@@ -41,18 +53,12 @@ class freecam_t
     AActor::AActorPtr mo;
 
     struct ticcmd_t cmd;
+    struct save_pos_t persist;
 
-    fixed_t cam_x;
-    fixed_t cam_y;
-    fixed_t cam_z;
-    angle_t cam_angle;
-    fixed_t cam_pitch;
-
-    void Serialize (FArchive &arc);
     bool wipedOnLevelChange();
 	void rebuild();
+  void savePosition();
     static freecam_t* getfreecam(byte id);
-
 };
 
 inline std::list<freecam_t> freecams;

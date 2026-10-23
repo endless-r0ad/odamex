@@ -23,18 +23,19 @@
 #include "freecam.h"
 #include <p_local.h>
 
-freecam_t::freecam_t(byte id, mapthing2_t spawn, bool useStartZ) : id(id), cam_pitch(0)
+freecam_t::freecam_t(byte id, mapthing2_t spawn, bool useStartZ) : id(id)
 {
-	cam_x = INT2FIXED(spawn.x);
-	cam_y = INT2FIXED(spawn.y);
-	cam_z = useStartZ ? INT2FIXED(spawn.z) : ONFLOORZ;
-	cam_angle = MapThingToAngle(spawn.angle);
+  persist.x = INT2FIXED(spawn.x);
+	persist.y = INT2FIXED(spawn.y);
+	persist.z = useStartZ ? INT2FIXED(spawn.z) : ONFLOORZ;
+	persist.angle = MapThingToAngle(spawn.angle);
+  persist.pitch = 0;
 
 	cmd.clear();
 
-	AActor* mobj = new AActor(cam_x, cam_y, cam_z, MT_FREECAM);
-	mobj->angle = cam_angle;
-	mobj->pitch = cam_pitch;
+	AActor* mobj = new AActor(persist.x, persist.y, persist.z, MT_FREECAM);
+	mobj->angle = persist.angle;
+	mobj->pitch = persist.pitch;
 	mobj->prevx = mobj->x;
 	mobj->prevy = mobj->y;
 	mobj->prevz = mobj->z;
@@ -51,9 +52,9 @@ bool freecam_t::wipedOnLevelChange()
 
 void freecam_t::rebuild()
 {
-	AActor* mobj = new AActor(cam_x, cam_y, cam_z, MT_FREECAM);
-	mobj->angle = cam_angle;
-	mobj->pitch = cam_pitch;
+	AActor* mobj = new AActor(persist.x, persist.y, persist.z, MT_FREECAM);
+	mobj->angle = persist.angle;
+	mobj->pitch = persist.pitch;
 	mobj->prevx = mobj->x;
 	mobj->prevy = mobj->y;
 	mobj->prevz = mobj->z;
@@ -61,6 +62,18 @@ void freecam_t::rebuild()
 	mobj->prevpitch = mobj->pitch;
 
 	this->camera = this->mo = mobj->ptr();
+}
+
+void freecam_t::savePosition()
+{
+  if (this->mo and this->camera)
+  {
+    persist.x = this->mo->x;
+    persist.y = this->mo->y;
+    persist.z = this->mo->z;
+    persist.angle = this->mo->angle;
+    persist.pitch = this->mo->pitch;
+  }
 }
 
 freecam_t* freecam_t::getfreecam(byte id)
@@ -72,32 +85,4 @@ freecam_t* freecam_t::getfreecam(byte id)
 	}
 
 	return nullptr;
-}
-
-void freecam_t::Serialize (FArchive &arc)
-{
-	if (arc.IsStoring ())
-	{ // saving to archive
-		arc << id
-			<< cmd
-			<< cam_x
-			<< cam_y
-			<< cam_z
-			<< cam_angle
-			<< cam_pitch;
-	}
-	else
-	{ // Restoring from archive
-		UserInfo dummyuserinfo;
-
-		arc >> id
-			>> cmd
-			>> cam_x
-			>> cam_y
-			>> cam_z
-			>> cam_angle
-			>> cam_pitch;
-
-		camera = mo;
-	}
 }

@@ -726,7 +726,7 @@ void G_DoLoadLevel (int position)
 
 		if (not freecam && start.has_value())
 		{
-			auto* f = new freecam_t(firstcam_id, start.value(), (bool)(level.flags & LEVEL_USEPLAYERSTARTZ));
+			auto* f = new freecam_t(firstcam_id, start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ));
 			freecams.push_back(*f);
 		}
 	}	

@@ -171,7 +171,7 @@ void CL_PredictSectors(int predtic)
 void CL_PredictSpying()
 {
 	player_t& player = displayplayer();
-	if (consoleplayer_id == displayplayer_id || displayplayer_id == nullplayer_id)
+	if (consoleplayer_id == displayplayer_id || freecamIsActive())
 		return;
 
 	// Save and restore the prevangle and prevpitch so that the client viewangle interpolation

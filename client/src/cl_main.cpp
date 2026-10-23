@@ -633,6 +633,9 @@ void CL_CheckDisplayPlayer(void)
 	static byte previd = consoleplayer_id;
 	byte newid = 0;
 
+  if (freecamIsActive())
+    return;
+
 	// [jsd]: try to spy on player by name when connected if spyplayername is set:
 	if (spyplayername.length() > 0) {
 		player_t &spyplayer = nameplayer(spyplayername);
@@ -1756,7 +1759,7 @@ void CL_SpectatePlayer(player_t& player, bool spectate)
 		}
 		else
 		{
-			if (!netdemo.isPlaying())
+			if (not netdemo.isInPlayback())
 			{
 				displayplayer_id = consoleplayer_id; // get out of spynext
 			}

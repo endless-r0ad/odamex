@@ -1610,7 +1610,10 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 	byte cid = consoleplayer_id;
 	byte did = displayplayer_id;
 
-	Freecam::savePosition();
+  for (auto& freecam : freecams)
+	{
+    freecam.savePosition();
+	}
 
 	P_ClearAllNetIds();
 
@@ -1735,7 +1738,7 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 	G_SerializeSnapshots(arc);
 
 	G_InitNew(mapname);
-	displayplayer_id = consoleplayer_id = 1;
+	consoleplayer_id = 1;
 	savegamerestore = false;
 
 	P_SerializeSprees(arc);
@@ -1753,9 +1756,9 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 
 	// try to restore display player
 	player_t *disp = &idplayer(did);
-	if ((validplayer(*disp) && disp->ingame() && !disp->spectator) || disp->isFreecam)
+	if (not freecamIsActive() and validplayer(*disp) and disp->ingame() and not disp->spectator)
 		displayplayer_id = did;
-	else
+	else if (not freecamIsActive())
 		displayplayer_id = cid;
 
 	// Link the CTF flag actors to CTFdata[i].actor

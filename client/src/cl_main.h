@@ -84,6 +84,8 @@ void CL_SendGiveCheat(const char* item);
 void CL_SendSummonCheat(const char* summon);
 void CL_SendSummonFriendCheat(const char* summon);
 
+bool CL_FreecamAllowedOnLevel();
+
 void CL_DisplayTics();
 void CL_RunTics();
 

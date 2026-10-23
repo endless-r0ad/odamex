@@ -2465,6 +2465,10 @@ void CL_SendSummonFriendCheat(const char* summon)
 	messenger.Reliable().Write(CLC_CheatSummonFriend(summon));
 }
 
+bool CL_FreecamAllowedOnLevel()
+{
+	return (netdemo.isInPlayback() or (G_IsLivesGame() and not G_IsTeamGame()));
+}
 
 void PickupMessage (const AActor *toucher, const char *message)
 {

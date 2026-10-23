@@ -523,11 +523,6 @@ void G_DoCompleted (void)
 }
 
 
-bool FreecamAllowedOnLevel()
-{
-	return (netdemo.isPlaying() or (G_IsLivesGame() and not G_IsTeamGame()));
-}
-
 
 //
 // G_DoLoadLevel
@@ -719,7 +714,7 @@ void G_DoLoadLevel (int position)
 	G_UnSnapshotLevel (!savegamerestore);	// [RH] Restore the state of the level.
 
 	// clientside freecam
-	if (FreecamAllowedOnLevel())
+	if (CL_FreecamAllowedOnLevel())
 	{
 		freecam_t* freecam = freecam_t::getfreecam(firstcam_id);
 		const std::optional<mapthing2_t> start = P_GetFirstAvailableSpawn();

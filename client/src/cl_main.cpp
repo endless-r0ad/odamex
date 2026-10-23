@@ -688,7 +688,7 @@ void CL_CheckDisplayPlayer(void)
 // are made to ensure only spectators can view enemy players.
 //
 template<class Iterator>
-void CL_SpyCycle(Iterator begin, Iterator end)
+void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
 {
 	// Make sure we have players to iterate over
 	if (players.empty())
@@ -723,7 +723,19 @@ void CL_SpyCycle(Iterator begin, Iterator end)
 		// Increment iterator and wrap around if we hit end.
 		// The sentinal will stop the lop.
 		if (++it == end)
-			it = begin;
+		{
+			if (freecams.empty())
+			{
+				it = begin;
+			}
+			else
+			{
+				displayplayer_id = nullplayer_id;
+				freecam_id = isNext ? freecams.front().id : freecams.back().id;
+				return;
+			}
+
+		}
 
 		player_t& self = consoleplayer();
 		player_t& player = *it;
@@ -745,6 +757,21 @@ void CL_SpyCycle(Iterator begin, Iterator end)
 			return;
 		}
 	} while (it != sentinal);
+}
+
+void CL_SpyCycleFreecams(bool next)
+{
+	freecam_t* freecam = freecam_t::getfreecam(next ? freecam_id + 1 : freecam_id - 1);
+
+	if (freecam)
+	{
+		freecam_id = next ? freecam_id + 1 : freecam_id - 1;
+	}
+	else // back to players
+	{
+		freecam_id = nullcam_id;
+		next ? AddCommandString("spynext") : AddCommandString("spyprev");
+	}
 }
 
 void D_ProcessEvents();
@@ -1200,13 +1227,16 @@ END_COMMAND (flagnext)
 
 BEGIN_COMMAND (spynext)
 {
-	CL_SpyCycle(players.begin(), players.end());
+	if (freecamIsActive())
+		CL_SpyCycleFreecams(true);
+	else
+		CL_SpyCycle(players.begin(), players.end(), true);
 }
 END_COMMAND (spynext)
 
 BEGIN_COMMAND (spyprev)
 {
-	CL_SpyCycle(players.rbegin(), players.rend());
+	CL_SpyCycle(players.rbegin(), players.rend(), false);
 }
 END_COMMAND (spyprev)
 

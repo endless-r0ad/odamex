@@ -1239,7 +1239,10 @@ END_COMMAND (spynext)
 
 BEGIN_COMMAND (spyprev)
 {
-	CL_SpyCycle(players.rbegin(), players.rend(), false);
+	if (freecamIsActive())
+		CL_SpyCycleFreecams(false);
+	else
+		CL_SpyCycle(players.rbegin(), players.rend(), false);
 }
 END_COMMAND (spyprev)
 

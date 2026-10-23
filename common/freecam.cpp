@@ -23,13 +23,18 @@
 #include "freecam.h"
 #include <p_local.h>
 
-freecam_t::freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
-    : id(id), cam_x(x), cam_y(y), cam_z(z), cam_angle(angle), cam_pitch(pitch)
+freecam_t::freecam_t(byte id, mapthing2_t spawn, bool useStartZ) : id(id), cam_pitch(0)
 {
+	cam_x = INT2FIXED(spawn.x);
+	cam_y = INT2FIXED(spawn.y);
+	cam_z = useStartZ ? INT2FIXED(spawn.z) : ONFLOORZ;
+	cam_angle = MapThingToAngle(spawn.angle);
+
 	cmd.clear();
-	AActor* mobj = new AActor(x, y, z, MT_FREECAM);
-	mobj->angle = angle;
-	mobj->pitch = pitch;
+
+	AActor* mobj = new AActor(cam_x, cam_y, cam_z, MT_FREECAM);
+	mobj->angle = cam_angle;
+	mobj->pitch = cam_pitch;
 	mobj->prevx = mobj->x;
 	mobj->prevy = mobj->y;
 	mobj->prevz = mobj->z;
@@ -37,22 +42,6 @@ freecam_t::freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fi
 	mobj->prevpitch = mobj->pitch;
 
 	camera = mo = mobj->ptr();
-
-	/*uint32_t max_u32 = 4294967295;
-
-	P_SetThingId(mobj, max_u32 - freecams.size());
-
-	mobj->LinkToWorld();
-
-	if (mobj->subsector)
-	{
-		mobj->floorz = P_FloorHeight(mobj);
-		mobj->ceilingz = P_CeilingHeight(mobj);
-		mobj->dropoffz = mobj->floorz;
-		mobj->floorsector = mobj->subsector->sector;
-	}
-
-	P_SetMobjState(mobj, mobj->info->spawnstate);*/
 };
 
 bool freecam_t::wipedOnLevelChange()
@@ -60,11 +49,11 @@ bool freecam_t::wipedOnLevelChange()
   return (this->mo == nullptr and this->camera == nullptr);
 }
 
-void freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch)
+void freecam_t::rebuild()
 {
-	AActor* mobj = new AActor(x, y, z, MT_FREECAM);
-	mobj->angle = angle;
-	mobj->pitch = pitch;
+	AActor* mobj = new AActor(cam_x, cam_y, cam_z, MT_FREECAM);
+	mobj->angle = cam_angle;
+	mobj->pitch = cam_pitch;
 	mobj->prevx = mobj->x;
 	mobj->prevy = mobj->y;
 	mobj->prevz = mobj->z;
@@ -72,33 +61,17 @@ void freecam_t::rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t 
 	mobj->prevpitch = mobj->pitch;
 
 	this->camera = this->mo = mobj->ptr();
-
-	/*uint32_t max_u32 = 4294967295;
-
-	P_SetThingId(mobj, max_u32 - freecams.size());
-
-	mobj->LinkToWorld();
-
-	if (mobj->subsector)
-	{
-		mobj->floorz = P_FloorHeight(mobj);
-		mobj->ceilingz = P_CeilingHeight(mobj);
-		mobj->dropoffz = mobj->floorz;
-		mobj->floorsector = mobj->subsector->sector;
-	}
-
-	P_SetMobjState(mobj, mobj->info->spawnstate);*/
 }
 
-freecam_t& freecam_t::idfreecam(byte id)
+freecam_t* freecam_t::getfreecam(byte id)
 {
 	for (auto& fcam : freecams)
 	{
 		if (fcam.id == id)
-			return fcam;
+			return &fcam;
 	}
 
-	return *new freecam_t(0, 0, 0, 0, 0, 0);
+	return nullptr;
 }
 
 void freecam_t::Serialize (FArchive &arc)

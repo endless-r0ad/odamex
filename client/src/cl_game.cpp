@@ -993,6 +993,8 @@ void G_Ticker (void)
 		C_AdjustBottom ();
 	}
 
+	freecam_t* freecam = freecam_t::getfreecam(freecam_id);
+
 	// The freecam is only valid while dead and out of lives (or in a netdemo)
 	// Nothing checks the inverse, so check it here and reset the view when we hit it.
 	if (freecamIsActive() && not netdemo.isInPlayback() && not demoplayback &&
@@ -1013,10 +1015,10 @@ void G_Ticker (void)
 			memcpy(&player.cmd, &player.netcmds[buf], sizeof(ticcmd_t));
 		}
 	}
-	// Rude - allow controlling displayplayer if freecam
-	else if (freecamIsActive())
+	// Rude - allow controlling freecam
+	else if (freecamIsActive() and freecam)
 	{
-		memcpy(&freecam_t::idfreecam(freecam_id).cmd, &consoleplayer().netcmds[buf], sizeof(ticcmd_t));
+		memcpy(&freecam->cmd, &consoleplayer().netcmds[buf], sizeof(ticcmd_t));
 
 		// Clear consoleplayer.cmd since they reapply every tic.
 		consoleplayer().cmd.clear();

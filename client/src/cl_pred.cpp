@@ -218,19 +218,19 @@ void CL_PredictRemotePlayers()
 //
 void CL_PredictFreecam()
 {
-	freecam_t& freecam = freecam_t::idfreecam(freecam_id);
+	freecam_t* freecam = freecam_t::getfreecam(freecam_id);
 
-	if (not freecamIsActive())
+	if (not freecam || not freecamIsActive())
 		return;
 
-	if (freecam.mo)
+	if (freecam and freecam->mo)
 	{
-		freecam.mo->prevx = freecam.mo->x;
-		freecam.mo->prevy = freecam.mo->y;
-		freecam.mo->prevz = freecam.mo->z;
+		freecam->mo->prevx = freecam->mo->x;
+		freecam->mo->prevy = freecam->mo->y;
+		freecam->mo->prevz = freecam->mo->z;
 	}
 
-	P_FreecamThink(freecam);
+	P_FreecamThink(*freecam);
 
 }
 

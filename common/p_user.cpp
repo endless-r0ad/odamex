@@ -501,9 +501,6 @@ void P_MoveFreecam (freecam_t& freecam)
 
 	AActor *mo = freecam.mo;
 
-	//mo->onground = (mo->z <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ);
-
-	// Move around.
 	// Reactiontime is used to prevent movement
 	//	for a bit after a teleport.
 	if (freecam.mo->reactiontime)
@@ -546,9 +543,7 @@ void P_MoveFreecam (freecam_t& freecam)
 	if (freecam.cmd.forwardmove | freecam.cmd.sidemove)
 	{
 		int friction;
-
 		int movefactor = P_GetMoveFactor (mo, &friction);
-		int bobfactor = friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
 		
 		fixed_t forwardmove = (freecam.cmd.forwardmove * movefactor) >> 8;
 		const fixed_t sidemove = (freecam.cmd.sidemove * movefactor) >> 8;

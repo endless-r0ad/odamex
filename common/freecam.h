@@ -33,7 +33,7 @@ inline byte freecam_id = 0;
 class freecam_t
 {
   public:
-    freecam_t(byte id, fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
+	freecam_t(byte id, mapthing2_t spawn, bool useStartZ);
 
     byte id;
 
@@ -50,8 +50,8 @@ class freecam_t
 
     void Serialize (FArchive &arc);
     bool wipedOnLevelChange();
-    void rebuild(fixed_t x, fixed_t y, fixed_t z, angle_t angle, fixed_t pitch);
-    static freecam_t& idfreecam(byte id);
+	void rebuild();
+    static freecam_t* getfreecam(byte id);
 
 };
 

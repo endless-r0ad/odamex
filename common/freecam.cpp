@@ -26,7 +26,7 @@
 freecam_t::freecam_t(byte id, mapthing2_t spawn, bool useStartZ) : id(id)
 {
 	cmd.clear();
-	this->build(spawn, useStartZ);
+	this->build(spawn, useStartZ, true);
 };
 
 bool freecam_t::wipedOnLevelChange()
@@ -34,13 +34,16 @@ bool freecam_t::wipedOnLevelChange()
 	return (this->mo == nullptr and this->camera == nullptr);
 }
 
-void freecam_t::build(mapthing2_t spawn, bool useStartZ)
+void freecam_t::build(mapthing2_t spawn, bool useStartZ, bool setSpawnPos)
 {
-  persist.x = INT2FIXED(spawn.x);
-	persist.y = INT2FIXED(spawn.y);
-	persist.z = useStartZ ? INT2FIXED(spawn.z) : ONFLOORZ;
-	persist.angle = MapThingToAngle(spawn.angle);
-	persist.pitch = 0;
+  if (setSpawnPos)
+  {
+    persist.x = INT2FIXED(spawn.x);
+    persist.y = INT2FIXED(spawn.y);
+    persist.z = useStartZ ? INT2FIXED(spawn.z) : ONFLOORZ;
+    persist.angle = MapThingToAngle(spawn.angle);
+    persist.pitch = 0;
+  }
 
 	AActor* mobj = new AActor(persist.x, persist.y, persist.z, MT_FREECAM);
 	mobj->angle = persist.angle;
@@ -64,6 +67,16 @@ void freecam_t::savePosition()
 		persist.angle = this->mo->angle;
 		persist.pitch = this->mo->pitch;
 	}
+}
+
+void freecam_t::reset()
+{
+	persist.clear();
+}
+
+bool freecam_t::needsPosition()
+{
+  return (persist.x == 0 and persist.y == 0 and persist.z == 0);
 }
 
 freecam_t* freecam_t::getfreecam(byte id)

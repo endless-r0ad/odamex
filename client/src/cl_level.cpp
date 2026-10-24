@@ -219,10 +219,13 @@ void G_InitNew (const char *mapname)
 		}
 	}
 
-	if (Freecam::allowAdd() && Freecam::prevmap != mapname)
+	if (CL_FreecamAllowedOnLevel() and freecam_t::prevmap != mapname)
 	{
-		Freecam::reset();
-		Freecam::prevmap = mapname;
+		for (auto& freecam : freecams)
+		{
+			freecam.reset();
+		}
+		freecam_t::prevmap = mapname;
 	}
 
 	cvar_t::UnlatchCVars ();
@@ -721,7 +724,7 @@ void G_DoLoadLevel (int position)
 
 		if (freecam and start.has_value() and freecam->wipedOnLevelChange())
 		{
-			freecam->build(start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ));
+			freecam->build(start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ), freecam->needsPosition());
 		}
 
 		if (not freecam && start.has_value())

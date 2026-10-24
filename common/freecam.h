@@ -55,7 +55,7 @@ public:
 	struct ticcmd_t cmd;
 
 	bool wipedOnLevelChange();
-	void rebuild();
+	void build(mapthing2_t spawn, bool useStartZ);
 	void savePosition();
 	static freecam_t* getfreecam(byte id);
 

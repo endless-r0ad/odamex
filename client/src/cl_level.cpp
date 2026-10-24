@@ -719,9 +719,9 @@ void G_DoLoadLevel (int position)
 		freecam_t* freecam = freecam_t::getfreecam(firstcam_id);
 		const std::optional<mapthing2_t> start = P_GetFirstAvailableSpawn();
 
-		if (freecam and freecam->wipedOnLevelChange())
+		if (freecam and start.has_value() and freecam->wipedOnLevelChange())
 		{
-			freecam->rebuild();
+			freecam->build(start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ));
 		}
 
 		if (not freecam && start.has_value())

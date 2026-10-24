@@ -735,6 +735,8 @@ void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
 			{
 				displayplayer_id = nullplayer_id;
 				freecam_id = isNext ? freecams.front().id : freecams.back().id;
+				R_ForceViewWindowResize();
+				ST_ForceRefresh();
 				return;
 			}
 
@@ -774,6 +776,8 @@ void CL_SpyCycleFreecams(bool next)
 	{
 		freecam_id = nullcam_id;
 		next ? AddCommandString("spynext") : AddCommandString("spyprev");
+		R_ForceViewWindowResize();
+		ST_ForceRefresh();
 	}
 }
 

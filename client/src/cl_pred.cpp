@@ -223,11 +223,13 @@ void CL_PredictFreecam()
 	if (not freecam || not freecamIsActive())
 		return;
 
-	if (freecam and freecam->mo)
+	if (freecam->mo)
 	{
 		freecam->mo->prevx = freecam->mo->x;
 		freecam->mo->prevy = freecam->mo->y;
 		freecam->mo->prevz = freecam->mo->z;
+    freecam->mo->prevangle = freecam->mo->angle;
+	  freecam->mo->prevpitch = freecam->mo->pitch;
 	}
 
 	P_FreecamThink(*freecam);

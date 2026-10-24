@@ -1163,9 +1163,10 @@ void AActor::RunThink ()
 		prevy = y;
 		prevz = z;
 	}
-
-	if (!player || P_IsVoodooDoll(this))    // True voodoo dolls have non-null player pointers, but we still want
-	{                                       // to update the dolls' previous angles, so check for that.
+  // True voodoo dolls have non-null player pointers, but we still want
+  // to update the dolls' previous angles, so check for that.
+	if ((not player or P_IsVoodooDoll(this)) and not (this->type == MT_FREECAM))
+	{
 		prevangle = angle;
 		prevpitch = pitch;
 	}

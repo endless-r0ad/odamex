@@ -1032,11 +1032,8 @@ void P_SetPlayerPowerupStatuses(player_t& player, std::span<const int, NUMPOWERS
 //
 void P_FreecamThink(freecam_t& freecam)
 {
-	freecam.mo->prevangle = freecam.mo->angle;
-	freecam.mo->prevpitch = freecam.mo->pitch;
-
+	
 	P_MoveFreecam(freecam);
-	//P_CalcFreecamHeight(freecam);
 
 	freecam.camera->z = freecam.mo->z;
 
@@ -1044,9 +1041,6 @@ void P_FreecamThink(freecam_t& freecam)
 		freecam.camera->z = freecam.mo->ceilingz-4*FRACUNIT;
 	if (freecam.camera->z < freecam.mo->floorz + 4*FRACUNIT)
 		freecam.camera->z = freecam.mo->floorz + 4*FRACUNIT;
-
-	//if (freecam.camera->prevz == 1) // don't interp first frame
-	//	player.prevviewz = player.viewz;
 
 	// A special event has no other buttons.
 	if (freecam.cmd.buttons & BT_SPECIAL)

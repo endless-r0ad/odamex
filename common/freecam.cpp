@@ -25,11 +25,11 @@
 
 freecam_t::freecam_t(byte id, mapthing2_t spawn, bool useStartZ) : id(id)
 {
-  persist.x = INT2FIXED(spawn.x);
+	persist.x = INT2FIXED(spawn.x);
 	persist.y = INT2FIXED(spawn.y);
 	persist.z = useStartZ ? INT2FIXED(spawn.z) : ONFLOORZ;
 	persist.angle = MapThingToAngle(spawn.angle);
-  persist.pitch = 0;
+	persist.pitch = 0;
 
 	cmd.clear();
 
@@ -47,7 +47,7 @@ freecam_t::freecam_t(byte id, mapthing2_t spawn, bool useStartZ) : id(id)
 
 bool freecam_t::wipedOnLevelChange()
 {
-  return (this->mo == nullptr and this->camera == nullptr);
+	return (this->mo == nullptr and this->camera == nullptr);
 }
 
 void freecam_t::rebuild()
@@ -66,14 +66,14 @@ void freecam_t::rebuild()
 
 void freecam_t::savePosition()
 {
-  if (this->mo and this->camera)
-  {
-    persist.x = this->mo->x;
-    persist.y = this->mo->y;
-    persist.z = this->mo->z;
-    persist.angle = this->mo->angle;
-    persist.pitch = this->mo->pitch;
-  }
+	if (this->mo and this->camera)
+	{
+		persist.x = this->mo->x;
+		persist.y = this->mo->y;
+		persist.z = this->mo->z;
+		persist.angle = this->mo->angle;
+		persist.pitch = this->mo->pitch;
+	}
 }
 
 freecam_t* freecam_t::getfreecam(byte id)

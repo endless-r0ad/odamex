@@ -32,33 +32,33 @@ inline byte freecam_id = 0;
 
 struct save_pos_t
 {
-	int tic          {0};
-	fixed_t x        {0};
-	fixed_t y        {0};
-	fixed_t z        {0};
-	fixed_t angle    {0};
-	fixed_t pitch    {0};
+	int tic{0};
+	fixed_t x{0};
+	fixed_t y{0};
+	fixed_t z{0};
+	fixed_t angle{0};
+	fixed_t pitch{0};
 
-  void clear() { tic = x = y = z = angle = pitch = 0; }
+	void clear() { tic = x = y = z = angle = pitch = 0; }
 };
 
 class freecam_t
 {
-  public:
+public:
 	freecam_t(byte id, mapthing2_t spawn, bool useStartZ);
 
-    byte id;
+	byte id;
 
-    AActor::AActorPtr camera;
-    AActor::AActorPtr mo;
+	AActor::AActorPtr camera;
+	AActor::AActorPtr mo;
 
-    struct ticcmd_t cmd;
-    struct save_pos_t persist;
+	struct ticcmd_t cmd;
+	struct save_pos_t persist;
 
-    bool wipedOnLevelChange();
+	bool wipedOnLevelChange();
 	void rebuild();
-  void savePosition();
-    static freecam_t* getfreecam(byte id);
+	void savePosition();
+	static freecam_t* getfreecam(byte id);
 };
 
 inline std::list<freecam_t> freecams;

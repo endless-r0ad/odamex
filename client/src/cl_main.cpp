@@ -766,6 +766,9 @@ void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
 
 void CL_SpyCycleFreecams(bool next)
 {
+	if (players.empty() and freecams.empty())
+		return;
+
 	freecam_t* freecam = freecam_t::getfreecam(next ? freecam_id + 1 : freecam_id - 1);
 
 	if (freecam)
@@ -775,7 +778,7 @@ void CL_SpyCycleFreecams(bool next)
 	else // back to players
 	{
 		freecam_id = nullcam_id;
-		next ? AddCommandString("spynext") : AddCommandString("spyprev");
+		displayplayer_id = next ? players.front().id : players.back().id;
 		R_ForceViewWindowResize();
 		ST_ForceRefresh();
 	}

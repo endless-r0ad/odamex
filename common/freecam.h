@@ -53,12 +53,14 @@ public:
 	AActor::AActorPtr mo;
 
 	struct ticcmd_t cmd;
-	struct save_pos_t persist;
 
 	bool wipedOnLevelChange();
 	void rebuild();
 	void savePosition();
 	static freecam_t* getfreecam(byte id);
+
+private:
+	struct save_pos_t persist;
 };
 
 inline std::list<freecam_t> freecams;

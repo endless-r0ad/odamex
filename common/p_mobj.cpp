@@ -1157,7 +1157,7 @@ void AActor::RunThink ()
 		return;
 	}
 
-	if (not player or not player->isFreecam)
+	if (not (this->type == MT_FREECAM))
 	{
 		prevx = x;
 		prevy = y;

@@ -727,7 +727,7 @@ void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
 		// The sentinal will stop the lop.
 		if (++it == end)
 		{
-			if (freecams.empty())
+			if (freecams.empty() or not CL_FreecamAllowSpy())
 			{
 				it = begin;
 			}
@@ -2474,6 +2474,14 @@ void CL_SendSummonFriendCheat(const char* summon)
 bool CL_FreecamAllowedOnLevel()
 {
 	return (netdemo.isInPlayback() or (G_IsLivesGame() and not G_IsTeamGame()));
+}
+
+bool CL_FreecamAllowSpy()
+{
+	return (netdemo.isInPlayback() or
+	        (consoleplayer().playerstate == PST_DEAD and
+           consoleplayer().lives < 1 and
+	         ::levelstate.getState() == LevelState::INGAME));
 }
 
 void PickupMessage (const AActor *toucher, const char *message)

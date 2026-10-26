@@ -1041,7 +1041,7 @@ mobjinfo_t odamobjinfo[] = {
         .cdheight         = 8_fx,
         .mass             = 100,
         .flags            = MF_NOGRAVITY | MF_FRIEND,
-		.flags2           = MF2_FLY,
+		.flags2           = MF2_FLY | MF2_SLIDE,
         .name             = "MT_FREECAM",
     },
 

@@ -592,11 +592,11 @@ void HU_Drawer()
 	if (gamestate == GS_LEVEL)
 		HU_DrawCrosshair();
 
-	if (consoleplayer().camera and not demoplayback and not freecamIsActive())
+	if (consoleplayer().camera and not demoplayback)
 	{
-		if ((gamestate != GS_INTERMISSION && Actions[ACTION_SHOWSCORES]) ||
-		    (::multiplayer && hud_show_scoreboard_ondeath &&
-		     displayplayer().health <= 0 && !displayplayer().spectator))
+		if ((gamestate != GS_INTERMISSION and Actions[ACTION_SHOWSCORES]) or
+		    (::multiplayer and hud_show_scoreboard_ondeath and
+		     displayplayer().health <= 0 and not displayplayer().spectator and not freecamIsActive()))
 		{
 			HU_DrawScores(&displayplayer());
 		}

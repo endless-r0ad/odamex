@@ -3,7 +3,7 @@
 //
 // $Id$
 //
-// Copyright (C) 2006-2026 by The Odamex Team.
+// Copyright (C) 2026 Jess W
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -32,14 +32,13 @@ inline byte freecam_id = 0;
 
 struct save_pos_t
 {
-	int tic{0};
 	fixed_t x{0};
 	fixed_t y{0};
 	fixed_t z{0};
 	fixed_t angle{0};
 	fixed_t pitch{0};
 
-	void clear() { tic = x = y = z = angle = pitch = 0; }
+	void clear() { x = y = z = angle = pitch = 0; }
 };
 
 class freecam_t
@@ -56,9 +55,9 @@ public:
 
 	bool wipedOnLevelChange();
 	void build(mapthing2_t spawn, bool useStartZ, bool setSpawnPos);
-	void savePosition();
+	void persistPosition();
   void reset();
-  bool needsPosition();
+  [[nodiscard]] bool needsPosition() const;
 	static freecam_t* getfreecam(byte id);
   
   inline static std::string prevmap;

@@ -3,7 +3,7 @@
 //
 // $Id$
 //
-// Copyright (C) 2006-2026 by The Odamex Team.
+// Copyright (C) 2026 by Jess W
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -57,7 +57,7 @@ void freecam_t::build(mapthing2_t spawn, bool useStartZ, bool setSpawnPos)
 	this->camera = this->mo = mobj->ptr();
 }
 
-void freecam_t::savePosition()
+void freecam_t::persistPosition()
 {
 	if (this->mo and this->camera)
 	{
@@ -74,7 +74,7 @@ void freecam_t::reset()
 	persist.clear();
 }
 
-bool freecam_t::needsPosition()
+bool freecam_t::needsPosition() const
 {
   return (persist.x == 0 and persist.y == 0 and persist.z == 0);
 }

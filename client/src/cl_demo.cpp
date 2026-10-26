@@ -1612,7 +1612,7 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 
   for (auto& freecam : freecams)
 	{
-    freecam.savePosition();
+    freecam.persistPosition();
 	}
 
 	P_ClearAllNetIds();

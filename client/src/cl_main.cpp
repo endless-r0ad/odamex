@@ -691,7 +691,7 @@ void CL_CheckDisplayPlayer(void)
 // are made to ensure only spectators can view enemy players.
 //
 template<class Iterator>
-void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
+void CL_SpyCycle(Iterator begin, Iterator end, bool forward)
 {
 	// Make sure we have players to iterate over
 	if (players.empty())
@@ -731,10 +731,10 @@ void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
 			{
 				it = begin;
 			}
-			else
+			else // freecams available
 			{
 				displayplayer_id = nullplayer_id;
-				freecam_id = isNext ? freecams.front().id : freecams.back().id;
+				freecam_id = forward ? freecams.front().id : freecams.back().id;
 				R_ForceViewWindowResize();
 				ST_ForceRefresh();
 				return;
@@ -742,43 +742,63 @@ void CL_SpyCycle(Iterator begin, Iterator end, bool isNext)
 
 		}
 
-		player_t& self = consoleplayer();
-		player_t& player = *it;
+		if (CL_SpyPlayerIfAble(*it))
+      return;
 
-		// spectators only cycle between active players
-		if (P_CanSpy(self, player, demoplayback || netdemo.isInPlayback()))
-		{
-			displayplayer_id = player.id;
-			CL_CheckDisplayPlayer();
-
-			if (demoplayback)
-			{
-				consoleplayer_id = player.id;
-				ST_ForceRefresh();
-			}
-
-			P_FriendlyEffects(); // Mark any new friendly monsters with an effect
-
-			return;
-		}
 	} while (it != sentinal);
 }
 
-void CL_SpyCycleFreecams(bool next)
+bool CL_SpyPlayerIfAble(player_t& player)
+{
+  // spectators only cycle between active players
+  if (P_CanSpy(consoleplayer(), player, demoplayback || netdemo.isInPlayback()))
+  {
+    displayplayer_id = player.id;
+    CL_CheckDisplayPlayer();
+
+    if (demoplayback)
+    {
+      consoleplayer_id = player.id;
+      ST_ForceRefresh();
+    }
+
+    P_FriendlyEffects(); // Mark any new friendly monsters with an effect
+
+    return true;
+  }
+  return false;
+}
+
+void CL_SpyCycleFreecams(bool forward)
 {
 	if (players.empty() and freecams.empty())
 		return;
 
-	freecam_t* freecam = freecam_t::getfreecam(next ? freecam_id + 1 : freecam_id - 1);
+	freecam_t* nextcam = freecam_t::getfreecam(forward ? freecam_id + 1 : freecam_id - 1);
 
-	if (freecam)
+	if (nextcam)
 	{
-		freecam_id = next ? freecam_id + 1 : freecam_id - 1;
+		freecam_id = nextcam->id;
 	}
 	else // back to players
 	{
 		freecam_id = nullcam_id;
-		displayplayer_id = next ? players.front().id : players.back().id;
+
+    if (forward) 
+    {
+      for (auto & player : players)
+      {
+          if (CL_SpyPlayerIfAble(player))
+            break;
+      }
+    } else 
+    {
+      for (auto & player : std::ranges::reverse_view(players))
+      {
+        if (CL_SpyPlayerIfAble(player))
+            break;
+      }
+    }
 		R_ForceViewWindowResize();
 		ST_ForceRefresh();
 	}

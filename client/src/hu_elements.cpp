@@ -140,7 +140,7 @@ bool inTeamPlayer(const player_t& player, const byte team)
 // Returns true if a player is a spectator
 bool spectatingPlayer(const player_t& player)
 {
-	return not freecamIsActive() and (not player.ingame() or player.spectator);
+	return (not player.ingame() or player.spectator);
 }
 
 // Returns a sorted player list.  Calculates at most once a gametic.

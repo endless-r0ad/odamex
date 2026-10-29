@@ -734,7 +734,7 @@ void G_DoLoadLevel (int position)
 		}
 	}	
 
-    P_DoDeferedScripts ();	// [RH] Do script actions that were triggered on another map.
+	P_DoDeferedScripts ();	// [RH] Do script actions that were triggered on another map.
 
 	::levelstate.reset();
 

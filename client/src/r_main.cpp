@@ -34,6 +34,7 @@
 #include "r_local.h"
 #include "r_sky.h"
 #include "r_interp.h"
+#include "r_voxel.h"
 #include "st_stuff.h"
 #include "v_video.h"
 #include "stats.h"
@@ -1120,6 +1121,7 @@ void R_RenderView(AActor::AActorPtr *cam)
 	R_ClearOpenings();
 	R_ClearPlanes(true);
 	R_ClearSprites();
+	VX_ClearVoxels();
 
 	R_ResetDrawFuncs();
 
@@ -1151,6 +1153,8 @@ void R_RenderView(AActor::AActorPtr *cam)
 	}
 	else
 		R_RenderBSPNode(numnodes - 1);	// The head node is the last node output.
+
+	VX_NearbySprites();
 
 	R_DrawPlanes();
 	R_DrawPortals();

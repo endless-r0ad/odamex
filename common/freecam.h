@@ -56,6 +56,7 @@ public:
 	bool wipedOnLevelChange();
 	void build(mapthing2_t spawn, bool useStartZ, bool setSpawnPos);
 	void persistPosition();
+	void moveToPosition(fixed_t x, fixed_t y, fixed_t z, angle_t angle);
   void reset();
   [[nodiscard]] bool needsPosition() const;
 	static freecam_t* getfreecam(byte id);

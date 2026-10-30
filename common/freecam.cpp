@@ -69,6 +69,16 @@ void freecam_t::persistPosition()
 	}
 }
 
+void freecam_t::moveToPosition(fixed_t x, fixed_t y, fixed_t z, angle_t angle)
+{
+	if (this->mo and this->camera)
+	{
+		this->mo->angle = angle;
+		this->mo->pitch = 0;
+		this->mo->SetOrigin(x, y, z);
+	}
+}
+
 void freecam_t::reset()
 {
 	persist.clear();

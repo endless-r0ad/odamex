@@ -754,23 +754,23 @@ void CL_SpyCycle(Iterator begin, Iterator end, bool forward)
 
 bool CL_SpyPlayerIfAble(player_t& player)
 {
-  // spectators only cycle between active players
-  if (P_CanSpy(consoleplayer(), player, demoplayback || netdemo.isInPlayback()))
-  {
-    displayplayer_id = player.id;
-    CL_CheckDisplayPlayer();
+	// spectators only cycle between active players
+	if (P_CanSpy(consoleplayer(), player, demoplayback || netdemo.isInPlayback()))
+	{
+		displayplayer_id = player.id;
+		CL_CheckDisplayPlayer();
 
-    if (demoplayback)
-    {
-      consoleplayer_id = player.id;
-      ST_ForceRefresh();
-    }
+		if (demoplayback)
+		{
+			consoleplayer_id = player.id;
+			ST_ForceRefresh();
+		}
 
-    P_FriendlyEffects(); // Mark any new friendly monsters with an effect
+		P_FriendlyEffects(); // Mark any new friendly monsters with an effect
 
-    return true;
-  }
-  return false;
+		return true;
+	}
+	return false;
 }
 
 void CL_SpyCycleFreecams(bool forward)
@@ -778,7 +778,7 @@ void CL_SpyCycleFreecams(bool forward)
 	if (players.empty() and freecams.empty())
 		return;
 
-	freecam_t* nextcam = freecam_t::getfreecam(forward ? freecam_id + 1 : freecam_id - 1);
+	const freecam_t* nextcam = freecam_t::getfreecam(forward ? freecam_id + 1 : freecam_id - 1);
 
 	if (nextcam)
 	{
@@ -788,21 +788,22 @@ void CL_SpyCycleFreecams(bool forward)
 	{
 		freecam_id = nullcam_id;
 
-    if (forward) 
-    {
-      for (auto & player : players)
-      {
-          if (CL_SpyPlayerIfAble(player))
-            break;
-      }
-    } else 
-    {
-      for (auto & player : std::ranges::reverse_view(players))
-      {
-        if (CL_SpyPlayerIfAble(player))
-            break;
-      }
-    }
+		if (forward)
+		{
+			for (auto& player : players)
+			{
+				if (CL_SpyPlayerIfAble(player))
+					break;
+			}
+		}
+		else
+		{
+			for (auto& player : std::ranges::reverse_view(players))
+			{
+				if (CL_SpyPlayerIfAble(player))
+					break;
+			}
+		}
 		R_ForceViewWindowResize();
 		ST_ForceRefresh();
 	}

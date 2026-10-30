@@ -25,6 +25,7 @@
 
 #include "odamex.h"
 
+#include "cl_main.h"
 #include "cl_parse.h"
 #include "p_ctf.h"
 #include "d_player.h"
@@ -44,7 +45,6 @@
 #include "g_spree.h"
 
 #include "PacketHeaderType.h"
-#include "cl_freecam.h"
 #include "f_wipe.h"
 
 EXTERN_CVAR(sv_maxclients)
@@ -638,8 +638,6 @@ bool NetDemo::stopPlaying()
 	reset();
 	gameaction = ga_fullconsole;
 	gamestate = GS_FULLCONSOLE;
-
-	Freecam::reset();
 
 	return true;
 }

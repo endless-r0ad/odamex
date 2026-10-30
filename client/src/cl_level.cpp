@@ -65,7 +65,6 @@ END_DISABLE_WARNING_GNU
 #include "g_spree.h"
 #include "g_deathspot.h"
 #include "g_gametype.h"
-#include "cl_freecam.h"
 #include "freecam.h"
 
 

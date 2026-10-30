@@ -70,7 +70,6 @@
 #include "g_gametype.h"
 #include "cl_parse.h"
 #include "cl_replay.h"
-#include "cl_freecam.h"
 #include "freecam.h"
 
 #include "m_consolecommandstream.h"

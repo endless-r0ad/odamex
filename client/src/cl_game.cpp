@@ -73,7 +73,6 @@ END_DISABLE_WARNING_GNU
 #include "g_spree.h"
 #include "g_multikill.h"
 #include "g_deathspot.h"
-#include "cl_freecam.h"
 #include "freecam.h"
 
 #include <math.h> // for pow()

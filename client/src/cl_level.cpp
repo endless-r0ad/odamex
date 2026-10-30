@@ -81,6 +81,7 @@ EXTERN_CVAR(sv_monstersrespawn)
 EXTERN_CVAR(sv_gravity)
 EXTERN_CVAR(sv_aircontrol)
 EXTERN_CVAR(g_resetinvonexit)
+EXTERN_CVAR(cl_noclip_spectator)
 
 // Start time for timing demos
 dtime_t starttime;
@@ -724,12 +725,12 @@ void G_DoLoadLevel (int position)
 
 		if (freecam and start.has_value() and freecam->wipedOnLevelChange())
 		{
-			freecam->build(start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ), freecam->needsPosition());
+			freecam->build(start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ), freecam->needsPosition(), cl_noclip_spectator);
 		}
 
 		if (not freecam && start.has_value())
 		{
-			auto* f = new freecam_t(firstcam_id, start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ));
+			auto* f = new freecam_t(firstcam_id, start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ), cl_noclip_spectator);
 			freecams.push_back(*f);
 		}
 	}	

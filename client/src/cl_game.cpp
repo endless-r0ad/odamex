@@ -201,7 +201,6 @@ CVAR_FUNC_IMPL(joy_freelook)
 CVAR_FUNC_IMPL(cl_noclip_spectator)
 {
 	player_t& c = consoleplayer();
-	player_t& d = displayplayer();
 
 	if (c.spectator and not netdemo.isInPlayback())
 	{
@@ -210,12 +209,12 @@ CVAR_FUNC_IMPL(cl_noclip_spectator)
 		else
 			c.cheats &= ~CF_NOCLIP;
 	}
-	if (d.isFreecam)
+	for (auto& freecam : freecams)
 	{
 		if (var.asInt())
-			d.cheats |= CF_NOCLIP;
+			freecam.mo->flags |= MF_NOCLIP;
 		else
-			d.cheats &= ~CF_NOCLIP;
+			freecam.mo->flags &= ~MF_NOCLIP;
 	}
 }
 

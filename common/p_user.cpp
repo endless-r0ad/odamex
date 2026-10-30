@@ -406,7 +406,7 @@ void P_CalcHeight (player_t& player)
 		bob = 0;
 
 	// move viewheight
-	if (player.playerstate == PST_LIVE || player.playerstate == PST_FREECAM)
+	if (player.playerstate == PST_LIVE)
 	{
 		player.viewheight += player.deltaviewheight;
 

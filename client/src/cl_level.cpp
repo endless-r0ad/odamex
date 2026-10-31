@@ -724,12 +724,12 @@ void G_DoLoadLevel (int position)
 
 		if (freecam and start.has_value() and freecam->wipedOnLevelChange())
 		{
-			freecam->build(start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ), freecam->needsPosition(), cl_noclip_spectator);
+			freecam->build(start.value(), freecam->needsPosition(), cl_noclip_spectator != 0.0f);
 		}
 
 		if (not freecam && start.has_value())
 		{
-			auto* f = new freecam_t(firstcam_id, start.value(), !!(level.flags & LEVEL_USEPLAYERSTARTZ), cl_noclip_spectator);
+			auto* f = new freecam_t(firstcam_id, start.value(), cl_noclip_spectator != 0.0f);
 			freecams.push_back(*f);
 		}
 	}	

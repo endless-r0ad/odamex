@@ -44,7 +44,7 @@ struct save_pos_t
 class freecam_t
 {
 public:
-	freecam_t(byte id, mapthing2_t spawn, bool useStartZ, bool noclip);
+	freecam_t(byte id, mapthing2_t spawn, bool noclip);
 
 	byte id;
 
@@ -54,7 +54,7 @@ public:
 	struct ticcmd_t cmd;
 
 	bool wipedOnLevelChange();
-	void build(mapthing2_t spawn, bool useStartZ, bool setSpawnPos, bool noclip);
+	void build(mapthing2_t spawn, bool setSpawnPos, bool noclip);
 	void persistPosition();
 	void moveToPosition(fixed_t x, fixed_t y, fixed_t z, angle_t angle);
 	void reset();

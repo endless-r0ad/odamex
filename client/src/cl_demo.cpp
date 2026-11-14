@@ -1608,8 +1608,8 @@ void NetDemo::writeSnapshotData(std::vector<byte>& buf)
 
 void NetDemo::readSnapshotData(std::vector<byte>& buf)
 {
-	byte cid = cmdstate.GetConsolePlayerId();
-	byte did = cmdstate.GetDisplayPlayerId();
+	const byte cid = cmdstate.GetConsolePlayerId();
+	const byte did = cmdstate.GetDisplayPlayerId();
 
 	for (auto& freecam : freecams)
 	{
@@ -1759,7 +1759,8 @@ void NetDemo::readSnapshotData(std::vector<byte>& buf)
 	cmdstate.SetConsolePlayerId(cid);
 
 	// try to restore display player
-	player_t *disp = &idplayer(did);
+	const player_t *disp = &idplayer(did);
+
 	if (not cmdstate.IsFreecam() and validplayer(*disp) and disp->ingame() and not disp->spectator)
 		cmdstate.SetDisplayPlayerId(did);
 	else if (not cmdstate.IsFreecam())

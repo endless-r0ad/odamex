@@ -673,7 +673,7 @@ void CL_CheckDisplayPlayer(void)
 		//
 		// Park it at the neutral position rather than wherever we last
 		// left this player.
-		if (newid != cmdstate.GetConsolePlayerId() && validplayer(displayplayer()))
+		if (newid != cmdstate.GetConsolePlayerId() and validplayer(displayplayer()))
 			P_RestPsprites(displayplayer());
 
 		// Changing display player can sometimes affect status bar visibility
@@ -716,7 +716,7 @@ void CL_SpyCycle(const Iterator& begin, const Iterator& end, bool forward)
 
 	// set the sentinal iterator to point to displayplayer
 	Iterator sentinal = begin;
-	while (sentinal != end && sentinal->id != cmdstate.GetDisplayPlayerId())
+	while (sentinal != end and sentinal->id != cmdstate.GetDisplayPlayerId())
 		++sentinal;
 
 	// We can't find the displayplayer.  This is bad.

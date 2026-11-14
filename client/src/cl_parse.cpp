@@ -1833,7 +1833,7 @@ void CL_PlayerMembers(const odaproto::svc::PlayerMembers* msg)
 
 	// Our own weapon is driven by prediction and the rollback state, so this is only
 	// here to tell us what everyone else is holding.
-	if ((flags & SVC_PM_WEAPON) && p.id != cmdstate.GetConsolePlayerId())
+	if ((flags & SVC_PM_WEAPON) and p.id != cmdstate.GetConsolePlayerId())
 	{
 		const int32_t ready = msg->readyweapon();
 		const int32_t pending = msg->pendingweapon();

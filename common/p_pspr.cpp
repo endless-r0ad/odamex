@@ -259,7 +259,7 @@ void A_FireSound (const player_t& player, const char *sound)
 	if (not serverside and player.id != cmdstate.GetConsolePlayerId())
 		return;
 
- 	UV_SoundAvoidPlayer (player.mo, CHAN_WEAPON, sound, ATTN_NORM);
+	UV_SoundAvoidPlayer(player.mo, CHAN_WEAPON, sound, ATTN_NORM);
 }
 
 //

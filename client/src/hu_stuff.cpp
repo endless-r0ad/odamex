@@ -535,7 +535,7 @@ void HU_Drawer()
 
 	if (gamestate == GS_LEVEL)
 	{
-		bool spechud = consoleplayer().spectator and cmdstate.IsSpyingSelf();
+		const bool spechud = consoleplayer().spectator and cmdstate.IsSpyingSelf();
 
 		hud::ResetMessageColumn();
 

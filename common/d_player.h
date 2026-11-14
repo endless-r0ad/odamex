@@ -642,9 +642,9 @@ private:
 	byte freecam_id = 0;        // freecam being displayed and controlled, default OFF
 
 public:
-	byte GetConsolePlayerId() const { return consoleplayer_id; }
-	byte GetDisplayPlayerId() const { return displayplayer_id; }
-	byte GetFreecamId() const { return freecam_id; }
+	[[nodiscard]] byte GetConsolePlayerId() const { return consoleplayer_id; }
+	[[nodiscard]] byte GetDisplayPlayerId() const { return displayplayer_id; }
+	[[nodiscard]] byte GetFreecamId() const { return freecam_id; }
 
 	void SetConsolePlayerId(byte id) { consoleplayer_id = id; }
 	void ResetDisplayPlayer()
